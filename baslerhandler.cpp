@@ -20,7 +20,7 @@ bool BaslerHandler::changePixelFormat(int index, std::string format) {
         _camera.Close();
         return true;
     } else  {
-        log(PYLON_TAG "Ошибка смены формата пикселя.", 2);
+        log(PYLON_TAG "Pixel format change error.", 2);
         return false;
     }
 
@@ -46,23 +46,23 @@ bool BaslerHandler::connectCamera(int index) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             _c ++;
             if(_c == 500) {
-                log(PYLON_TAG "Невозможно подключить камеру " + _name + "@" + _address, 1);
+                log(PYLON_TAG "Unable to connect camera " + _name + "@" + _address, 1);
                 return false;
             }
         }
     } catch (const GenericException &e) {
-        log(PYLON_TAG "Вощникла ошибка подключения камеры " + _name + "@" + _address, 2);
+        log(PYLON_TAG "Camera connection error " + _name + "@" + _address, 2);
         log(e.GetDescription(), 2);
         return false;
     }
 
-    log(PYLON_TAG "Камера " + _name + " успешно подключена.");
+    log(PYLON_TAG "Camera " + _name + " connected successfully.", 0);
     return true;
 }
 
 void BaslerHandler::disconnectCamera(int index) {
     camerasArray[index].Close();
-    log(PYLON_TAG "Камера " + std::string(camerasArray[index].GetDeviceInfo().GetModelName().c_str()) + " отключена.");
+    log(PYLON_TAG "Camera " + std::string(camerasArray[index].GetDeviceInfo().GetModelName().c_str()) + " disconnected.", 0);
 }
 
 BaslerHandler::camera* BaslerHandler::getCameraAt(int index){
@@ -111,10 +111,10 @@ void BaslerHandler::refreshCameras() {
         camerasArray.Initialize(devicesInfoList.size());
         if (devicesInfoList.empty()) {
 
-            log(PYLON_TAG "Нет подключйнных камер.");
+            log(PYLON_TAG "No connected cameras.", 0);
         } else {
-            log(PYLON_TAG "Найдено камер " + std::to_string(
-                    _tlFactory.EnumerateDevices(devicesInfoList)));
+            log(PYLON_TAG "Cameras found " + std::to_string(
+                    _tlFactory.EnumerateDevices(devicesInfoList)), 0);
             CInstantCameraArray _camerasArray(devicesInfoList.size());
             for (size_t _i = 0; _i < devicesInfoList.size(); _i++) {
                 camerasArray[_i].Attach(_tlFactory.CreateDevice(devicesInfoList[_i]));
@@ -122,8 +122,8 @@ void BaslerHandler::refreshCameras() {
         }
 
     } catch (const GenericException &e) {
-        log(PYLON_TAG "Произошла ошибка.");
-        log(PYLON_TAG + std::string(e.GetDescription()));
+        log(PYLON_TAG "An error has occurred.", 2);
+        log(PYLON_TAG + std::string(e.GetDescription()), 2);
     }
 
 }
@@ -137,7 +137,7 @@ void BaslerHandler::grabLoop(int cameraIndex) {
         if (!_cam.IsOpen()) _cam.Open();
         _formatConverter.OutputPixelFormat.SetValue(PixelType_RGB8packed);
         _cam.StartGrabbing(GrabStrategy_LatestImageOnly);
-        log(PYLON_TAG "Начат захват с камеры " + std::string(_cam.GetDeviceInfo().GetModelName().c_str()) + ".");
+        log(PYLON_TAG "Capture started from camera " + std::string(_cam.GetDeviceInfo().GetModelName().c_str()) + ".", 0);
         while (grabbing) {
             _cam.RetrieveResult(5000, _ptrGrabResult, TimeoutHandling_ThrowException);
             _formatConverter.Convert(_pylonImage, _ptrGrabResult);
@@ -146,10 +146,10 @@ void BaslerHandler::grabLoop(int cameraIndex) {
         }
         _cam.StopGrabbing();
     } catch (const GenericException &e) {
-        log(PYLON_TAG "Произошла ошибка.", 2);
+        log(PYLON_TAG "An error has occurred.", 2);
         log(PYLON_TAG + std::string(e.GetDescription()), 2);
     }
-    log(PYLON_TAG "Остановлен захват с камеры " + std::string(_cam.GetDeviceInfo().GetModelName().c_str()) + ".", 0);
+    log(PYLON_TAG "Capture form camera " + std::string(_cam.GetDeviceInfo().GetModelName().c_str()) + " stopped.", 0);
 }
 
 
