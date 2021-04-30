@@ -1,10 +1,13 @@
 /**
- * Created by vava94 on 30.03.2020.
+ * Created by Vitaliy Kiselyov on 30.03.2020.
  * https://github.com/vava94/BaslerHandler
  * vitkiselyov@gmail.com
  */
+
 #ifndef BASLERHANDLER_HPP
 #define BASLERHANDLER_HPP
+
+
 #include <functional>
 #include <string>
 #include <thread>
@@ -18,85 +21,77 @@
 #include <pylon/usb/BaslerUsbInstantCameraArray.h>
 #include <pylon/TlFactory.h>
 
-
 using namespace Pylon;
 using namespace  GenApi;
 
 class BaslerHandler {
 
-private:
-    bool grabbing = false;
-    CInstantCameraArray camerasArray;
-    DeviceInfoList_t devicesInfoList;
-    std::function<void(int, uint8_t*)> frameCallback;
-    std::function<void(std::string ,int)> log;
-    std::string name;
-    std::thread *grabThread;
-
-    void grabLoop(int cameraIndex);
 
 public:
 
-    struct camera {
-
-    private:
-        bool grabbing = false, online = false;
-        int _width, _height, _formatIndex;
-        std::string _address, _name;
-        StringList_t _pixelValues;
-        String_t _currentPixelFormat;
-
-    public:
-
-        camera(std::string address,
-               std::string name,
-               int width, int height,
-               const StringList_t& pixelValues) {
-            _address = std::move(address);
-            _name = std::move(name);
-            _height = height;
-            _width = width;
-            _pixelValues = pixelValues;
-            _formatIndex = -1;
-        }
-
-        [[nodiscard]] String_t currentPixelFormat() const { return _currentPixelFormat; }
-        [[nodiscard]] int currentPixelFormatIndex() const { return _formatIndex;}
-        [[nodiscard]] std::string getAddress() const { return _address; }
-        [[nodiscard]] std::string getName() const { return _name; }
-        [[nodiscard]] int height() const { return _height; }
-        [[nodiscard]] bool isGrabbing() const { return grabbing; }
-        [[nodiscard]] bool isOnline() const { return online; }
-        [[nodiscard]] int width() const { return _width; }
-        [[nodiscard]] StringList_t pixelValues() const { return _pixelValues; }
-        void setGrabbing() { grabbing = true; }
-        void setStopped() { grabbing = false; }
-        void setOffline() { online = false; }
-        void setOnline() { online = true; }
-        void setPixelFormat(const String_t& format) {
-            for (int _i = 0; _i < _pixelValues.size(); _i ++) {
-                if(_pixelValues[_i].compare(format) == 0) {
-                    _formatIndex = _i;
-                    break;
-                }
-            }
-            _currentPixelFormat = format;
-        }
-
+    struct Frame {
+        int width;
+        int height;
+        EPixelType pixelType;
+        uint8_t *data;
     };
 
     explicit BaslerHandler();
-    camera* getCameraAt(int index);
+
     size_t getSize();
+
     bool changePixelFormat(int index, std::string format);
+
     bool connectCamera(int index);
+
+    void closeCamera(int index);
+
     void disconnectCamera(int index);
+
+    void enableLogging(bool enable);
+
+    std::string getCameraAddress(int index);
+
+    std::string getCameraName(int index);
+
+    int getFrameHeight(int index);
+
+    int getFrameWidth(int index);
+
+    /**
+     * Check camera for grabbing.
+     * @param index = -1 -> is any camera is grabbing
+     * @return true if grabbing.
+     */
+    bool isGrabbing(int index = -1);
+
+    void openCamera(int index);
+
     void refreshCameras();
-    void setFrameCallback(std::function<void(int, uint8_t*)> callback);
-    void setLogger(std::function<void(std::string, int)>);
+
+    void setFrameCallback(std::function<void(int, Frame)> callback);
+
+    void setLogger(std::function<void(std::string, int)>, bool enable = true);
+
     void startGrabbing(int index);
+
     void stopGrabbing(int index);
-    ~BaslerHandler(); 
+
+    ~BaslerHandler();
+
+private:
+
+    bool mLogging = false;
+    int mGrabbersSize = 0;
+    CInstantCameraArray mCamerasArray;
+
+    std::function<void(int, Frame)> frameCallback = nullptr;
+    std::function<void(std::string, int)> log = nullptr;
+    //std::string name;
+    std::thread **mGrabThreads;
+
+    void grabLoop(int cameraIndex);
+
 
 };
 
