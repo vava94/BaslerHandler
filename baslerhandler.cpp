@@ -13,16 +13,24 @@ BaslerHandler::BaslerHandler() {
 
     PylonInitialize();
     mGrabThreads = nullptr;
+#ifdef  BASLERHANDLER_SETTINGS_GUI
+        settingsWidget = new SettingsWidget;
+#endif
+
+}
+
+bool BaslerHandler::applySetting(std::string name, std::string value) {
+
 }
 
 bool BaslerHandler::changePixelFormat(int index, std::string format) {
-    auto &_camera = mCamerasArray[index];
-    INodeMap &_nodemap = _camera.GetNodeMap();
-    _camera.Open();
-    CEnumParameter _pixelFormat(_nodemap, "PixelFormat");
+    auto &camera = mCamerasArray[index];
+    INodeMap &nodemap = camera.GetNodeMap();
+    camera.Open();
+    CEnumParameter _pixelFormat(nodemap, "PixelFormat");
     if(_pixelFormat.CanSetValue(format.data())) {
         _pixelFormat.SetValue(format.data());
-        _camera.Close();
+        camera.Close();
         return true;
     } else  {
         if (mLogging) {
@@ -32,11 +40,7 @@ bool BaslerHandler::changePixelFormat(int index, std::string format) {
     }
 }
 
-void BaslerHandler::closeCamera(int index) {
-    if ((mCamerasArray.GetSize() - 1) < index) return;
-    if (!mCamerasArray[index].IsOpen()) return;
-    mCamerasArray[index].Close();
-}
+
 
 bool BaslerHandler::connectCamera(int index) {
     int c = 0;
@@ -53,7 +57,6 @@ bool BaslerHandler::connectCamera(int index) {
     try {
 
         INodeMap& nodeMap = mCamerasArray[index].GetNodeMap();
-
         mCamerasArray[index].Open();
         while(!mCamerasArray[index].IsOpen()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -64,6 +67,7 @@ bool BaslerHandler::connectCamera(int index) {
                 }
                 return false;
             }
+
         }
     } catch (const GenericException &e) {
         if (mLogging) {
@@ -135,12 +139,6 @@ bool BaslerHandler::isGrabbing(int index) {
     }
 }
 
-void BaslerHandler::openCamera(int index) {
-    if ((mCamerasArray.GetSize() - 1) < index) return;
-    if (mCamerasArray[index].IsOpen()) return;
-    mCamerasArray[index].Open();
-}
-
 void BaslerHandler::refreshCameras() {
 
     DeviceInfoList deviceInfoList;
@@ -194,7 +192,7 @@ void BaslerHandler::refreshCameras() {
 
 }
 
-void BaslerHandler::grabLoop(int cameraIndex) {
+void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
 
     auto &cam = mCamerasArray[cameraIndex];
     CGrabResultPtr ptrGrabResult;
@@ -202,15 +200,17 @@ void BaslerHandler::grabLoop(int cameraIndex) {
     CPylonImage pylonImage;
     uint8_t *tmpData;
     size_t bufferSize;
+
     Frame grabFrame{
         .width = getFrameWidth(cameraIndex),
         .height = getFrameHeight(cameraIndex),
-        .pixelType = PixelType_RGB8packed,
+        .channels = 0,
+        .pixelType = pixelType,
         .data = nullptr
     };
     try {
         if (!cam.IsOpen()) cam.Open();
-        formatConverter.OutputPixelFormat.SetValue(PixelType_RGB8packed);
+        formatConverter.OutputPixelFormat.SetValue(pixelType);
         cam.StartGrabbing(GrabStrategy_LatestImageOnly);
         if (mLogging) {
             log(PYLON_TAG "Grab started from camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) +
@@ -220,10 +220,12 @@ void BaslerHandler::grabLoop(int cameraIndex) {
         formatConverter.Convert(pylonImage, ptrGrabResult);
         grabFrame.data = new uint8_t[pylonImage.GetAllocatedBufferSize()];
         bufferSize = pylonImage.GetAllocatedBufferSize();
+        grabFrame.channels = bufferSize / (grabFrame.width * grabFrame.height);
         while (cam.IsGrabbing()) {
             cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
             formatConverter.Convert(pylonImage, ptrGrabResult);
             memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
+
             frameCallback(cameraIndex, grabFrame);
             std::this_thread::sleep_for(std::chrono::microseconds(10));
 
@@ -241,6 +243,11 @@ void BaslerHandler::grabLoop(int cameraIndex) {
     std::cout << "grab stopped" << std::endl;
 }
 
+#ifdef BASLERHANDLER_SETTINGS_GUI
+void BaslerHandler::showSettings(int cameraIndex) {
+
+}
+#endif
 
 void BaslerHandler::setFrameCallback(std::function<void (int, Frame)> callback) {
     frameCallback = std::move(callback);
@@ -251,9 +258,62 @@ void BaslerHandler::setLogger(std::function<void(std::string, int)> logger, bool
     mLogging = enable;
 }
 
-void BaslerHandler::startGrabbing(int index) {
+BaslerSettings::ErrorCode BaslerHandler::setSetting(BaslerSettings::Settings name, std::string value) {
+    switch(name) {
+        case BaslerSettings::EXPOSURE_AUTO:
+            //TODO
+            break;
+        case BaslerSettings::EXPOSURE_TIME:
+            //TODO
+            break;
+        case BaslerSettings::FRAME_HEIGHT:
+            //TODO
+            break;
+        case BaslerSettings::FRAME_WIDTH:
+            //TODO
+            break;
+        case BaslerSettings::GAIN:
+            //TODO
+            break;
+        case BaslerSettings::GAIN_AUTO:
+            //TODO
+            break;
+        case BaslerSettings::GAIN_MAX:
+            //TODO
+            break;
+        case BaslerSettings::GAIN_MIN:
+            //TODO
+            break;
+        case BaslerSettings::GAIN_SELECTOR:
+            //TODO
+            break;
+        case BaslerSettings::LOAD_SET:
+            //TODO
+            break;
+        case BaslerSettings::OFFSET_X:
+            //TODO
+            break;
+        case BaslerSettings::OFFSET_Y:
+            //TODO
+            break;
+        case BaslerSettings::PIXEL_FORMAT:
+            //TODO
+            break;
+        case BaslerSettings::SAVE_SET:
+            //TODO
+            break;
+        case BaslerSettings::UID:
+            //TODO
+            break;
+        default:
+            return BaslerSettings::NO_SUCH_SETTING;
+    }
+    return BaslerSettings::OK;
+}
+
+void BaslerHandler::startGrabbing(int index, EPixelType pixelType) {
     if (mCamerasArray[index].IsGrabbing()) return;
-    mGrabThreads[index] = new std::thread(std::bind(&BaslerHandler::grabLoop, this, std::placeholders::_1), index);
+    mGrabThreads[index] = new std::thread(std::bind(&BaslerHandler::grabLoop, this, std::placeholders::_1, std::placeholders::_2), index, pixelType);
 }
 
 void BaslerHandler::stopGrabbing(int index) {
