@@ -5,6 +5,8 @@
 #ifndef SETTINGSWIDGET_H
 #define SETTINGSWIDGET_H
 
+#include "baslersettings.h"
+
 #include <QWidget>
 
 
@@ -17,8 +19,8 @@ class SettingsWidget : public QWidget {
     Q_OBJECT
     Ui::SettingsWidget *ui;
 
-    std::function<bool(std::string, std::string)> applySettingCallback;
-    std::function<std::string(const std::string&)> getSettingCallback;
+    std::function<bool(BaslerSettings::Settings setting, std::string)> mApplySettingCallback;
+    std::function<std::string(BaslerSettings::Settings setting)> mGetSettingCallback;
 
     void connectWidgets();
     void disconnectWidgets();
@@ -28,36 +30,36 @@ public:
     explicit SettingsWidget(QWidget *parent = nullptr);
     ~SettingsWidget() override;
 
-    void setCallback(std::function<bool(std::string, std::string)> applySettingCallback);
-    void setCallback(std::function<std::string(const std::string&)> getSettingCallback);
+    void setCallback(std::function<bool(BaslerSettings::Settings, std::string)> applySettingCallback);
+    void setCallback(std::function<std::string(BaslerSettings::Settings)> getSettingCallback);
     void setSetting(std::string name, std::string value);
 
 private slots:
 
-    void on_confSetComboBox_currentIndexChanged(int index);
-    void on_exposureAutoComboBox_currentIndexChanged(int index);
-    void on_exposureTimeSlider_valueChanged(int value);
-    void on_exposureTimeSpinBox_valueChanged(int value);
-    void on_frameHeightSlider_valueChanged(int value);
-    void on_frameHeightSpinBox_valueChanged(int value);
-    void on_frameWidthSlider_valueChanged(int value);
-    void on_frameWidthSpinBox_valueChanged(int value);
-    void on_gainAutoComboBox_currentIndexChanged(int index);
-    void on_gainMaxSpinBox_valueChanged(int value);
-    void on_gainMinSpinBox_valueChanged(int value);
-    void on_gainSelectorComboBox_currentIndexChanged(int index);
-    void on_gainSpinBox_valueChanged(int value);
-    void on_loadUserSetButton_clicked();
-    void on_offsetXSlider_valueChanged(int value);
-    void on_offsetXSpinBox_valueChanged(int value);
-    void on_offsetYSlider_valueChanged(int value);
-    void on_offsetYSpinBox_valueChanged(int value);
-    void on_pixelFormatComboBox_currentIndexChanged(int index);
-    void on_saveUserSetButton_clicked();
+    void onConfSetComboBoxIndexChanged(int index);
+    void onExposureAutoComboBoxTextChanged(const QString& text);
+    void onExposureTimeSliderValueChanged(int value);
+    void onExposureTimeSpinBoxValueChanged(int value);
+    void onFrameHeightSliderValueChanged(int value);
+    void onFrameHeightSpinBoxValueChanged(int value);
+    void onFrameWidthSliderValueChanged(int value);
+    void onFrameWidthSpinBoxValueChanged(int value);
+    void onGainAutoComboBoxIndexChanged(int index);
+    void onGainMaxSpinBoxValueChanged(int value);
+    void onGainMinSpinBoxValueChanged(int value);
+    void onGainSelectorComboBoxIndexChanged(int index);
+    void onGainSpinBoxValueChanged(int value);
+    void onLoadUserSetButtonClicked();
+    void onOffsetXSliderValueChanged(int value);
+    void onOffsetXSpinBoxValueChanged(int value);
+    void onOffsetYSliderValueChanged(int value);
+    void onOffsetYSpinBoxValueChanged(int value);
+    void onPixelFormatComboBoxIndexChanged(int index);
+    void onSaveUserSetButtonClicked();
 
-    void on_startupSetComboCox_currentIndexChanged(int index);
-    void on_targetFPSSpinBox_valueChanged(double value);
-    void on_uidLineEdit_textEdited(const QString& text);
+    void onStartupSetComboCoxIndexChanged(int index);
+    void onTargetFPSSpinBoxValueChanged(double value);
+    void onUidLineEditTextEdited(const QString& text);
 
 protected:
     void showEvent(QShowEvent *event) override;

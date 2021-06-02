@@ -32,7 +32,7 @@ using namespace Pylon;
 using namespace  GenApi;
 
 class BaslerHandler {
-
+#define LOG_TAG "BaslerHandler: "
 public:
 
     struct Frame {
@@ -45,13 +45,7 @@ public:
 
     explicit BaslerHandler();
 
-    bool applySetting(std::string name, std::string value);
-
-    std::string getSetting(std::string);
-
-    size_t getSize();
-
-    std::string getSetting(BaslerSettings::Settings);
+    bool applySetting(BaslerSettings::Settings setting, std::string value);
 
     bool changePixelFormat(int index, std::string format);
 
@@ -69,6 +63,10 @@ public:
 
     int getFrameWidth(int index);
 
+    std::string getSetting(int cameraIndex, BaslerSettings::Settings setting);
+
+    size_t getSize();
+
     /**
      * Check camera for grabbing.
      * @param index = -1 -> is any camera is grabbing
@@ -85,7 +83,7 @@ public:
 
     void setLogger(std::function<void(std::string, int)>, bool enable = true);
 
-    BaslerSettings::ErrorCode setSetting(BaslerSettings::Settings name, std::string value);
+    BaslerSettings::ErrorCode setSetting(int camIndex, BaslerSettings::Settings name, std::string value);
 
     void startGrabbing(int index, EPixelType pixelType);
 

@@ -18,24 +18,31 @@ public:
         OK = 0,
         VALUE_ERROR = -1,
         NO_SUCH_SETTING = -2,
-        SETTING_VALUE_MISMATCH = -3,
-        ERROR_WRITING_VALUE = -4
+        VALUE_TYPE_ERROR = -3,
+        ERROR_WRITING_VALUE = -4,
+        CAM_IS_CLOSED = -5,
+        NODE_IS_NOT_WRITEABLE = -6,
+        SETTING_NOT_AVAILABLE = -7
     };
 
     enum Settings {
         EXPOSURE_AUTO,
+        EXPOSURE_AUTO_LIST,
         EXPOSURE_TIME,
         FRAME_HEIGHT,
         FRAME_WIDTH,
         GAIN,
         GAIN_AUTO,
+        GAIN_AUTO_LIST,
         GAIN_MAX,
         GAIN_MIN,
         GAIN_SELECTOR,
+        GAIN_SELECTOR_LIST,
         LOAD_SET,
         OFFSET_X,
         OFFSET_Y,
         PIXEL_FORMAT,
+        PIXEL_FORMATS_LIST,
         SAVE_SET,
         UID
     };

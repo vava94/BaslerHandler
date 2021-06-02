@@ -2,12 +2,10 @@
 // Created by vok on 21.04.2021.
 //
 
-// You may need to build the project (run Qt uic code generator) to get "ui_SettingsWidget.h" resolved
-
-#include <iostream>
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
 
+#include <iostream>
 
 SettingsWidget::SettingsWidget(QWidget *parent) :
         QWidget(parent), ui(new Ui::SettingsWidget) {
@@ -16,156 +14,171 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
 
 void SettingsWidget::connectWidgets() {
 
-    connect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_confSetComboBox_currentIndexChanged(int)));
-    connect(ui->exposureAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_exposureAutoComboBox_currentIndexChanged(int)));
-    connect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(on_exposureTimeSlider_valueChanged(int)));
-    connect(ui->exposureTimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_exposureTimeSpinBox_valueChanged(int)));
-    connect(ui->frameHeightSlider, SIGNAL(valueChanged(int)), this, SLOT(on_frameHeightSlider_valueChanged(int)));
-    connect(ui->frameHeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_frameHeightSpinBox_valueChanged(int)));
-    connect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::on_frameWidthSlider_valueChanged);
-    connect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_frameWidthSpinBox_valueChanged(int)));
-    connect(ui->gainAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_gainAutoComboBox_currentIndexChanged(int)));
-    connect(ui->gainMinSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainMinSpinBox_valueChanged(int)));
-    connect(ui->gainMaxSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainMaxSpinBox_valueChanged(int)));
-    connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_gainSelectorComboBox_currentIndexChanged(int)));
-    connect(ui->gainSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainSpinBox_valueChanged(int)));
-    connect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(on_loadUserSetButton_clicked()));
-    connect(ui->offsetXSlider, SIGNAL(valueChanged(int)), this, SLOT(on_offsetXSlider_valueChanged(int)));
-    connect(ui->offsetXSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_offsetXSpinBox_valueChanged(int)));
-    connect(ui->offsetYSlider, SIGNAL(valueChanged(int)), this, SLOT(on_offsetYSlider_valueChanged(int)));
-    connect(ui->offsetYSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_offsetYSpinBox_valueChanged(int)));
-    connect(ui->pixelFormatComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_pixelFormatComboBox_currentIndexChanged(int index)));
-    connect(ui->saveUserSetButton, SIGNAL(clicked()), this, SLOT(on_saveUserSetButton_clicked()));
-    connect(ui->startupSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_startupSetComboCox_currentIndexChanged(int)));
-    connect(ui->targetFPSSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_targetFPSSpinBox_valueChanged(double)));
-    connect(ui->uidLineEdit, &QLineEdit::textEdited, this, &SettingsWidget::on_uidLineEdit_textEdited);
+    connect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onConfSetComboBoxIndexChanged(int)));
+    connect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
+    connect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSliderValueChanged(int)));
+    connect(ui->exposureTimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSpinBoxValueChanged(int)));
+    connect(ui->frameHeightSlider, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSliderValueChanged(int)));
+    connect(ui->frameHeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSpinBoxValueChanged(int)));
+    connect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::onFrameWidthSliderValueChanged);
+    connect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameWidthSpinBoxValueChanged(int)));
+    connect(ui->gainAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainAutoComboBoxIndexChanged(int)));
+    connect(ui->gainMinSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainMinSpinBoxValueChanged(int)));
+    connect(ui->gainMaxSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainMaxSpinBoxValueChanged(int)));
+    connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxIndexChanged(int)));
+    connect(ui->gainSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainSpinBoxValueChanged(int)));
+    connect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(onLoadUserSetButtonClicked()));
+    connect(ui->offsetXSlider, SIGNAL(valueChanged(int)), this, SLOT(onOffsetXSliderValueChanged(int)));
+    connect(ui->offsetXSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onOffsetXSpinBoxValueChanged(int)));
+    connect(ui->offsetYSlider, SIGNAL(valueChanged(int)), this, SLOT(onOffsetYSliderValueChanged(int)));
+    connect(ui->offsetYSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onOffsetYSpinBoxValueChanged(int)));
+    connect(ui->pixelFormatComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onPixelFormatComboBoxIndexChanged(int)));
+    connect(ui->saveUserSetButton, SIGNAL(clicked()), this, SLOT(onSaveUserSetButtonClicked()));
+    connect(ui->startupSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onStartupSetComboCoxIndexChanged(int)));
+    connect(ui->targetFPSSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onTargetFPSSpinBoxValueChanged(double)));
+    connect(ui->uidLineEdit, &QLineEdit::textEdited, this, &SettingsWidget::onUidLineEditTextEdited);
 
 }
 
 void SettingsWidget::disconnectWidgets() {
 
-    connect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_confSetComboBox_currentIndexChanged(int)));
-    connect(ui->exposureAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_exposureAutoComboBox_currentIndexChanged(int)));
-    connect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(on_exposureTimeSlider_valueChanged(int)));
-    connect(ui->exposureTimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_exposureTimeSpinBox_valueChanged(int)));
-    connect(ui->frameHeightSlider, SIGNAL(valueChanged(int)), this, SLOT(on_frameHeightSlider_valueChanged(int)));
-    connect(ui->frameHeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_frameHeightSpinBox_valueChanged(int)));
-    connect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::on_frameWidthSlider_valueChanged);
-    connect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_frameWidthSpinBox_valueChanged(int)));
-    connect(ui->gainAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_gainAutoComboBox_currentIndexChanged(int)));
-    connect(ui->gainMinSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainMinSpinBox_valueChanged(int)));
-    connect(ui->gainMaxSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainMaxSpinBox_valueChanged(int)));
-    connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_gainSelectorComboBox_currentIndexChanged(int)));
-    connect(ui->gainSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_gainSpinBox_valueChanged(int)));
-    connect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(on_loadUserSetButton_clicked()));
-    connect(ui->offsetXSlider, SIGNAL(valueChanged(int)), this, SLOT(on_offsetXSlider_valueChanged(int)));
-    connect(ui->offsetXSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_offsetXSpinBox_valueChanged(int)));
-    connect(ui->offsetYSlider, SIGNAL(valueChanged(int)), this, SLOT(on_offsetYSlider_valueChanged(int)));
-    connect(ui->offsetYSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_offsetYSpinBox_valueChanged(int)));
-    connect(ui->pixelFormatComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_pixelFormatComboBox_currentIndexChanged(int index)));
-    connect(ui->saveUserSetButton, SIGNAL(clicked()), this, SLOT(on_saveUserSetButton_clicked()));
-    connect(ui->startupSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(on_startupSetComboCox_currentIndexChanged(int)));
-    connect(ui->targetFPSSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_targetFPSSpinBox_valueChanged(double)));
-    connect(ui->uidLineEdit, &QLineEdit::textEdited, this, &SettingsWidget::on_uidLineEdit_textEdited);
+    connect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onConfSetComboBoxIndexChanged(int)));
+    connect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(int)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
+    connect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSliderValueChanged(int)));
+    connect(ui->exposureTimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSpinBoxValueChanged(int)));
+    connect(ui->frameHeightSlider, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSliderValueChanged(int)));
+    connect(ui->frameHeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSpinBoxValueChanged(int)));
+    connect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::onFrameWidthSliderValueChanged);
+    connect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameWidthSpinBoxValueChanged(int)));
+    connect(ui->gainAutoComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainAutoComboBoxIndexChanged(int)));
+    connect(ui->gainMinSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainMinSpinBoxValueChanged(int)));
+    connect(ui->gainMaxSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainMaxSpinBoxValueChanged(int)));
+    connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxCurrentIndexChanged(int)));
+    connect(ui->gainSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onGainSpinBoxValueChanged(int)));
+    connect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(onLoadUserSetButtonClicked()));
+    connect(ui->offsetXSlider, SIGNAL(valueChanged(int)), this, SLOT(onOffsetXSliderValueChanged(int)));
+    connect(ui->offsetXSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onOffsetXSpinBoxValueChanged(int)));
+    connect(ui->offsetYSlider, SIGNAL(valueChanged(int)), this, SLOT(onOffsetYSliderValueChanged(int)));
+    connect(ui->offsetYSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onOffsetYSpinBoxValueChanged(int)));
+    connect(ui->pixelFormatComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onPpixelFormatComboBoxIndexChanged(int index)));
+    connect(ui->saveUserSetButton, SIGNAL(clicked()), this, SLOT(onSaveUserSetButtonClicked()));
+    connect(ui->startupSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onStartupSetComboCoxIndexChanged(int)));
+    connect(ui->targetFPSSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onTargetFPSSpinBoxValueChanged(double)));
+    connect(ui->uidLineEdit, &QLineEdit::textEdited, this, &SettingsWidget::onUidLineEditTextEdited);
 
 }
 
-void SettingsWidget::on_confSetComboBox_currentIndexChanged(int index) {
+void SettingsWidget::onConfSetComboBoxIndexChanged(int index) {
     // TODO: Callback to BaslerHandler
     // Re-set parameters
 }
 
-void SettingsWidget::on_exposureAutoComboBox_currentIndexChanged(int index) {
-    // TODO: Callback to BaslerHandle
+void SettingsWidget::onExposureAutoComboBoxTextChanged(const QString& text) {
+    if (!mApplySettingCallback(BaslerSettings::EXPOSURE_AUTO, text.toStdString()) ) {
+        auto val = mGetSettingCallback(BaslerSettings::EXPOSURE_AUTO);
+        int count = ui->exposureAutoComboBox->count();
+        for (int i = 0; i < count; i ++) {
+            if (ui->exposureAutoComboBox->itemText(i).toStdString() == val) {
+                disconnect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
+                ui->exposureAutoComboBox->setCurrentIndex(i);
+                connect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
+                break;
+            }
+        }
+    }
 }
 
-void SettingsWidget::on_exposureTimeSpinBox_valueChanged(int value) {
+void SettingsWidget::onExposureTimeSpinBoxValueChanged(int value) {
     if (value != ui->exposureTimeSlider->value()) {
         ui->exposureTimeSlider->setValue(value);
     }
 }
 
-void SettingsWidget::on_exposureTimeSlider_valueChanged(int value) {
+void SettingsWidget::onExposureTimeSliderValueChanged(int value) {
     // TODO: Callback to BaslerHandle
 }
 
-void SettingsWidget::on_frameHeightSlider_valueChanged(int value) {
+void SettingsWidget::onFrameHeightSliderValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_frameHeightSpinBox_valueChanged(int value) {
+void SettingsWidget::onFrameHeightSpinBoxValueChanged(int value) {
     if (value != ui->frameHeightSlider->value()) {
         ui->frameHeightSlider->setValue(value);
     }
 }
 
-void SettingsWidget::on_frameWidthSlider_valueChanged(int value) {
+void SettingsWidget::onFrameWidthSliderValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_frameWidthSpinBox_valueChanged(int value) {
+void SettingsWidget::onFrameWidthSpinBoxValueChanged(int value) {
     if (value != ui->frameWidthSlider->value()) {
         ui->frameWidthSlider->setValue(value);
     }
 }
 
-void SettingsWidget::on_gainAutoComboBox_currentIndexChanged(int value) {
+void SettingsWidget::onGainAutoComboBoxIndexChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_gainMaxSpinBox_valueChanged(int value) {
+void SettingsWidget::onGainMaxSpinBoxValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_gainMinSpinBox_valueChanged(int value) {
+void SettingsWidget::onGainMinSpinBoxValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_gainSelectorComboBox_currentIndexChanged(int index) {
+void SettingsWidget::onGainSelectorComboBoxIndexChanged(int index) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_gainSpinBox_valueChanged(int value) {
+void SettingsWidget::onGainSpinBoxValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_loadUserSetButton_clicked() {
+void SettingsWidget::onLoadUserSetButtonClicked() {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_offsetXSlider_valueChanged(int value) {
+void SettingsWidget::onOffsetXSliderValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_offsetXSpinBox_valueChanged(int value) {
+void SettingsWidget::onOffsetXSpinBoxValueChanged(int value) {
     if (value != ui->offsetXSlider->value()) {
         ui->offsetXSlider->setValue(value);
     }
 }
 
-void SettingsWidget::on_offsetYSlider_valueChanged(int value) {
+void SettingsWidget::onOffsetYSliderValueChanged(int value) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_offsetYSpinBox_valueChanged(int value) {
+void SettingsWidget::onOffsetYSpinBoxValueChanged(int value) {
     if (value != ui->offsetYSlider->value()) {
         ui->offsetYSlider->setValue(value);
     }
 }
 
-void SettingsWidget::on_saveUserSetButton_clicked() {
+void SettingsWidget::onPixelFormatComboBoxIndexChanged(int index) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_startupSetComboCox_currentIndexChanged(int index) {
+void SettingsWidget::onSaveUserSetButtonClicked() {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_targetFPSSpinBox_valueChanged(double value) {
+void SettingsWidget::onStartupSetComboCoxIndexChanged(int index) {
     // TODO: Callback to BaslerHandler
 }
 
-void SettingsWidget::on_uidLineEdit_textEdited(const QString &text) {
+void SettingsWidget::onTargetFPSSpinBoxValueChanged(double value) {
+    // TODO: Callback to BaslerHandler
+}
+
+void SettingsWidget::onUidLineEditTextEdited(const QString &text) {
     // TODO: Callback to BaslerHandler
 }
 
@@ -174,11 +187,17 @@ void SettingsWidget::setSetting(std::string name, std::string value) {
 
 }
 
+void SettingsWidget::setCallback(std::function<bool(BaslerSettings::Settings, std::string)> applySettingCallback) {
+    mApplySettingCallback = std::move(applySettingCallback);
+}
+
+void SettingsWidget::setCallback(std::function<std::string(BaslerSettings::Settings)> getSettingCallback) {
+    mGetSettingCallback = std::move(getSettingCallback);
+}
+
 void SettingsWidget::showEvent(QShowEvent *event) {
     QWidget::showEvent(event);
-
-
-
+    connectWidgets();
 }
 
 SettingsWidget::~SettingsWidget() {
