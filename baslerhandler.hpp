@@ -57,6 +57,8 @@ public:
 
     std::string getCameraAddress(int index);
 
+    size_t getCamerasCount();
+
     std::string getCameraName(int index);
 
     int getFrameHeight(int index);
@@ -65,7 +67,7 @@ public:
 
     std::string getSetting(int cameraIndex, BaslerSettings::Settings setting);
 
-    size_t getSize();
+
 
     /**
      * Check camera for grabbing.
@@ -74,7 +76,7 @@ public:
      */
     bool isGrabbing(int index = -1);
 
-    void refreshCameras();
+    size_t refreshCameras();
 
 #ifdef BASLERHANDLER_SETTINGS_GUI
     void showSettings(int cameraIndex);

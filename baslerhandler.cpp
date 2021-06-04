@@ -107,6 +107,10 @@ std::string BaslerHandler::getCameraAddress(int index) {
     else return "";
 }
 
+size_t BaslerHandler::getCamerasCount() {
+    return mCamerasArray.GetSize();
+}
+
 std::string BaslerHandler::getCameraName(int index) {
     if (index > (mCamerasArray.GetSize() - 1)) return "";
     return mCamerasArray[index].GetDeviceInfo().GetModelName().c_str();
@@ -247,9 +251,7 @@ std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings settin
     return value;
 }
 
-size_t BaslerHandler::getSize() {
-    return mCamerasArray.GetSize();
-}
+
 
 bool BaslerHandler::isGrabbing(int index) {
     if (index == -1) {
@@ -260,7 +262,7 @@ bool BaslerHandler::isGrabbing(int index) {
     }
 }
 
-void BaslerHandler::refreshCameras() {
+size_t BaslerHandler::refreshCameras() {
 
     DeviceInfoList deviceInfoList;
     int counter = 0;
@@ -310,7 +312,7 @@ void BaslerHandler::refreshCameras() {
             log(PYLON_TAG + std::string(e.GetDescription()), 2);
         }
     }
-
+    return mCamerasArray.GetSize();
 }
 
 void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {

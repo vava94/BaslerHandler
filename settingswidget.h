@@ -6,7 +6,7 @@
 #define SETTINGSWIDGET_H
 
 #include "baslersettings.h"
-
+#include <functional>
 #include <QWidget>
 
 
