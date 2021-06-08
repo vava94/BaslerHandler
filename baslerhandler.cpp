@@ -80,6 +80,19 @@ bool BaslerHandler::connectCamera(int index) {
     return true;
 }
 
+BaslerHandler::Frame* BaslerHandler::convertFormat(Frame *input, EPixelType pixelType) {
+    CImageFormatConverter formatConverter;
+    formatConverter.OutputPixelFormat.SetValue(pixelType);
+    auto frame = new Frame{};
+    frame->width = input->width;
+    frame->height = input->height;
+    frame->pixelType = pixelType;
+    frame->size = formatConverter.GetBufferSizeForConversion(input->pixelType, input->width, input->height);
+    frame->data = new uint8_t [frame->size];
+    formatConverter.Convert(frame->data, frame->size, input->data, input->size, input->pixelType, input->width, input->height,0,ImageOrientation_BottomUp);
+    return frame;
+}
+
 void BaslerHandler::disconnectCamera(int index) {
     mCamerasArray[index].Close();
     if (mLogging) {
@@ -344,13 +357,13 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
         grabFrame.data = new uint8_t[pylonImage.GetAllocatedBufferSize()];
         bufferSize = pylonImage.GetAllocatedBufferSize();
         grabFrame.channels = bufferSize / (grabFrame.width * grabFrame.height);
+        grabFrame.size = bufferSize;
         while (cam.IsGrabbing()) {
             cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
             formatConverter.Convert(pylonImage, ptrGrabResult);
             memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
-
-            frameCallback(cameraIndex, grabFrame);
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            frameCallback(cameraIndex, &grabFrame);
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
 
         }
     } catch (const GenericException &e) {
@@ -372,7 +385,7 @@ void BaslerHandler::showSettings(int cameraIndex) {
 }
 #endif
 
-void BaslerHandler::setFrameCallback(std::function<void (int, Frame)> callback) {
+void BaslerHandler::setFrameCallback(std::function<void (int, Frame*)> callback) {
     frameCallback = std::move(callback);
 }
 

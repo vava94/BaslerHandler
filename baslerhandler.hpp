@@ -41,6 +41,7 @@ public:
         unsigned char channels;
         EPixelType pixelType;
         uint8_t *data;
+        size_t size;
     };
 
     explicit BaslerHandler();
@@ -50,6 +51,8 @@ public:
     bool changePixelFormat(int index, std::string format);
 
     bool connectCamera(int index);
+
+    static Frame* convertFormat(Frame *input, EPixelType pixelType);
 
     void disconnectCamera(int index);
 
@@ -81,7 +84,7 @@ public:
 #ifdef BASLERHANDLER_SETTINGS_GUI
     void showSettings(int cameraIndex);
 #endif
-    void setFrameCallback(std::function<void(int, Frame)> callback);
+    void setFrameCallback(std::function<void(int, Frame*)> callback);
 
     void setLogger(std::function<void(std::string, int)>, bool enable = true);
 
@@ -99,7 +102,7 @@ private:
     int mGrabbersSize = 0;
     CInstantCameraArray mCamerasArray;
     SettingsWidget *settingsWidget;
-    std::function<void(int, Frame)> frameCallback = nullptr;
+    std::function<void(int, Frame*)> frameCallback = nullptr;
     std::function<void(std::string, int)> log = nullptr;
     //std::string name;
     std::thread **mGrabThreads;
