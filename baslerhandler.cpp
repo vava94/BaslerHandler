@@ -147,6 +147,10 @@ int BaslerHandler::getFrameWidth(int index) {
     return (int) width.GetValue();
 }
 
+float BaslerHandler::getFPS(int cameraIndex) {
+    return frameRates[cameraIndex];
+}
+
 std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings setting) {
 
     auto& cam = mCamerasArray[index];
@@ -325,6 +329,7 @@ size_t BaslerHandler::refreshCameras() {
             log(PYLON_TAG + std::string(e.GetDescription()), 2);
         }
     }
+    frameRates.resize(mCamerasArray.GetSize());
     return mCamerasArray.GetSize();
 }
 
@@ -334,10 +339,13 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
     CGrabResultPtr ptrGrabResult;
     CImageFormatConverter formatConverter;
     CPylonImage pylonImage;
-    uint8_t *tmpData;
+    float currFps;
+    int arrayPos = 0, frameTimes[10] = {0};
     size_t bufferSize;
 
+
     Frame grabFrame{
+        .exposureTime = 0,
         .width = getFrameWidth(cameraIndex),
         .height = getFrameHeight(cameraIndex),
         .channels = 0,
@@ -358,8 +366,22 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
         bufferSize = pylonImage.GetAllocatedBufferSize();
         grabFrame.channels = bufferSize / (grabFrame.width * grabFrame.height);
         grabFrame.size = bufferSize;
+        auto startPoint = std::chrono::high_resolution_clock::now();
         while (cam.IsGrabbing()) {
+
             cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+            frameTimes[arrayPos] = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - startPoint)).count();
+            startPoint = std::chrono::high_resolution_clock::now();
+            if (arrayPos == 9) {
+                memcpy(frameTimes, &frameTimes[1], sizeof(int) * 9);
+            }
+            if (arrayPos < 9) arrayPos++;
+            for (int frameTime : frameTimes) {
+                currFps += (float)frameTime;
+            }
+            frameRates[cameraIndex] = 1000 / (currFps * 0.1);
+            currFps = 0;
+            grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
             formatConverter.Convert(pylonImage, ptrGrabResult);
             memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
             frameCallback(cameraIndex, &grabFrame);

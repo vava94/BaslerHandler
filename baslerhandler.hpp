@@ -36,6 +36,7 @@ class BaslerHandler {
 public:
 
     struct Frame {
+        int exposureTime;
         int width;
         int height;
         unsigned char channels;
@@ -67,6 +68,8 @@ public:
     int getFrameHeight(int index);
 
     int getFrameWidth(int index);
+
+    float getFPS(int cameraIndex);
 
     std::string getSetting(int cameraIndex, BaslerSettings::Settings setting);
 
@@ -104,7 +107,7 @@ private:
     SettingsWidget *settingsWidget;
     std::function<void(int, Frame*)> frameCallback = nullptr;
     std::function<void(std::string, int)> log = nullptr;
-    //std::string name;
+    std::vector<float> frameRates;
     std::thread **mGrabThreads;
 
     void grabLoop(int cameraIndex, EPixelType pixelType);
