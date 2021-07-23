@@ -57,7 +57,7 @@ public:
 
     void disconnectCamera(int index);
 
-    void enableLogging(bool enable);
+    [[maybe_unused]] void enableLogging(bool enable);
 
     std::string getCameraAddress(int index);
 

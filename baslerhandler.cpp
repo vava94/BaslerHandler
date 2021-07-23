@@ -25,9 +25,9 @@ bool BaslerHandler::applySetting(BaslerSettings::Settings setting, std::string v
 
 bool BaslerHandler::changePixelFormat(int index, std::string format) {
     auto &camera = mCamerasArray[index];
-    INodeMap &nodemap = camera.GetNodeMap();
+    INodeMap &nodeMap = camera.GetNodeMap();
     camera.Open();
-    CEnumParameter pixelFormat(nodemap, "PixelFormat");
+    CEnumParameter pixelFormat(nodeMap, "PixelFormat");
     if(pixelFormat.CanSetValue(format.data())) {
         pixelFormat.SetValue(format.data());
         camera.Close();
@@ -42,6 +42,8 @@ bool BaslerHandler::changePixelFormat(int index, std::string format) {
 
 bool BaslerHandler::connectCamera(int index) {
     int c = 0;
+    std::string msg;
+
     auto name = std::string(mCamerasArray[index].GetDeviceInfo().GetModelName().c_str());
     std::string address;
 
@@ -101,7 +103,7 @@ void BaslerHandler::disconnectCamera(int index) {
     }
 }
 
-void BaslerHandler::enableLogging(bool enable) {
+[[maybe_unused]] void BaslerHandler::enableLogging(bool enable) {
     if (log == nullptr) {
         mLogging = false;
     } else {
@@ -340,7 +342,8 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
     CImageFormatConverter formatConverter;
     CPylonImage pylonImage;
     float currFps;
-    int arrayPos = 0, frameTimes[10] = {0};
+    int arrayPos = 0;
+    long frameTimes[10] = {0};
     size_t bufferSize;
 
 
@@ -376,12 +379,15 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
                 memcpy(frameTimes, &frameTimes[1], sizeof(int) * 9);
             }
             if (arrayPos < 9) arrayPos++;
-            for (int frameTime : frameTimes) {
+            for (auto frameTime : frameTimes) {
                 currFps += (float)frameTime;
             }
-            frameRates[cameraIndex] = 1000 / (currFps * 0.1);
+            frameRates[cameraIndex] = 1000.0f / (currFps * 0.1f);
             currFps = 0;
-            grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
+            char *endChar;
+            grabFrame.exposureTime = (int) std::strtol(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str(), &endChar, 10);
+            /// TODO: Delete
+            //grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
             formatConverter.Convert(pylonImage, ptrGrabResult);
             memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
             frameCallback(cameraIndex, &grabFrame);
@@ -429,7 +435,6 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
     BaslerSettings::ErrorCode err;
 
     switch(name) {
-//--> Использовать GetMax()  из значений.
         case BaslerSettings::EXPOSURE_AUTO: {
             auto node = nodeMap.GetNode("ExposureAuto");
             if (GenApi::IsWritable(node)) {
@@ -484,13 +489,13 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                err = BaslerSettings::VALUE_TYPE_ERROR;
                break;
            }
-            if (valueInt < 10 || valueInt > 916000) {
+            node = nodeMap.GetNode("ExposureTimeRaw");
+            CIntegerParameter val1(node);
+            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
                 return BaslerSettings::VALUE_ERROR;
             }
-            node = nodeMap.GetNode("ExposureTimeRaw");
 
             if (GenApi::IsWritable(node)) {
-                CIntegerParameter val1(node);
                 if (val1.TrySetValue(valueInt)) {
                     err = BaslerSettings::OK;
                 }
@@ -536,6 +541,9 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                     err = BaslerSettings::ERROR_WRITING_VALUE;
                 }
             }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
         }
         case BaslerSettings::FRAME_WIDTH: {
@@ -568,6 +576,9 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                 } else {
                     err = BaslerSettings::ERROR_WRITING_VALUE;
                 }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
             }
             break;
         }
@@ -603,22 +614,137 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                 } else {
                     err = BaslerSettings::ERROR_WRITING_VALUE;
                 }
+            } else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
             }
             break;
         }
-        case BaslerSettings::GAIN_AUTO:
-            //TODO
+        case BaslerSettings::GAIN_AUTO: {
+            auto node = nodeMap.GetNode("GainAuto");
+            if (GenApi::IsWritable(node)) {
+                CEnumParameter nodeValue(node);
+                StringList_t list;
+                nodeValue.GetAllValues(list);
+                /// check setting value with available values
+                err = BaslerSettings::VALUE_ERROR;
+                for (const auto &item : list) {
+                    if (std::strcmp(item, value.c_str()) == 0) {
+                        err = BaslerSettings::OK;
+                        break;
+                    }
+                }
+                if (err != BaslerSettings::OK) {
+                    break;
+                }
+                /// Trying to set value
+                if (nodeValue.TrySetValue(value.data())) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::GAIN_MAX:
-            //TODO
+        }
+        case BaslerSettings::GAIN_MAX:{
+            int valueInt;
+            size_t id;
+            try {
+                valueInt = std::stoi(value, &id, 10);
+            }
+            catch (...) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (id != value.size()) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            auto node = nodeMap.GetNode("AutoGainUpperLimit");
+            CIntegerParameter val1(node);
+            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
+                return BaslerSettings::VALUE_ERROR;
+            }
+
+            if (GenApi::IsWritable(node)) {
+                if (val1.TrySetValue(valueInt)) {
+                    err = BaslerSettings::OK;
+                }
+                else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::GAIN_MIN:
-            //TODO
+        }
+        case BaslerSettings::GAIN_MIN:{
+            int valueInt;
+            size_t id;
+            try {
+                valueInt = std::stoi(value, &id, 10);
+            }
+            catch (...) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (id != value.size()) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            auto node = nodeMap.GetNode("AutoGainLowerLimit");
+            CIntegerParameter val1(node);
+            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
+                return BaslerSettings::VALUE_ERROR;
+            }
+
+            if (GenApi::IsWritable(node)) {
+                if (val1.TrySetValue(valueInt)) {
+                    err = BaslerSettings::OK;
+                }
+                else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::GAIN_SELECTOR:
-            //TODO
+        }
+        case BaslerSettings::GAIN_SELECTOR:{
+            auto node = nodeMap.GetNode("GainSelector");
+            if (GenApi::IsWritable(node)) {
+                CEnumParameter nodeValue(node);
+                StringList_t list;
+                nodeValue.GetAllValues(list);
+                /// check setting value with available values
+                err = BaslerSettings::VALUE_ERROR;
+                for (const auto &item : list) {
+                    if (std::strcmp(item, value.c_str()) == 0) {
+                        err = BaslerSettings::OK;
+                        break;
+                    }
+                }
+                if (err != BaslerSettings::OK) {
+                    break;
+                }
+                /// Trying to set value
+                if (nodeValue.TrySetValue(value.data())) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
+        }
         case BaslerSettings::LOAD_SET:
+            --> Заполнение настроек
             //TODO
             break;
         case BaslerSettings::OFFSET_X:
@@ -644,7 +770,10 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
 
 void BaslerHandler::startGrabbing(int index, EPixelType pixelType) {
     if (mCamerasArray[index].IsGrabbing()) return;
-    mGrabThreads[index] = new std::thread(std::bind(&BaslerHandler::grabLoop, this, std::placeholders::_1, std::placeholders::_2), index, pixelType);
+    mGrabThreads[index] = new std::thread(
+            [this](auto && PH1, auto && PH2) {
+                grabLoop(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
+                }, index, pixelType);
 }
 
 void BaslerHandler::stopGrabbing(int index) {
