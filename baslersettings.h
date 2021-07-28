@@ -13,6 +13,8 @@ public:
 #define OFF "Off"
 #define ONCE "Once"
 #define PIXEL_FMT_MONO8 "Mono8"
+#define USER_SET_LOAD "UserSetLoad"
+#define USER_SET_SAVE "UserSetSave"
 
     enum ErrorCode {
         OK = 0,
@@ -26,11 +28,18 @@ public:
     };
 
     enum Settings {
+        ACQUISITION_FRAME_RATE,
+        CAMERA_ADDRESS,
+        CAMERA_NAME,
         EXPOSURE_AUTO,
         EXPOSURE_AUTO_LIST,
         EXPOSURE_TIME,
+        EXPOSURE_TIME_MAX,
+        EXPOSURE_TIME_MIN,
         FRAME_HEIGHT,
+        FRAME_HEIGHT_MAX,
         FRAME_WIDTH,
+        FRAME_WIDTH_MAX,
         GAIN,
         GAIN_AUTO,
         GAIN_AUTO_LIST,
@@ -44,7 +53,10 @@ public:
         PIXEL_FORMAT,
         PIXEL_FORMATS_LIST,
         SAVE_SET,
-        UID
+        UID,
+        USER_SET_DEFAULT,
+        USER_SET_SELECTOR,
+        USER_SET_SELECTOR_LIST,
     };
 };
 

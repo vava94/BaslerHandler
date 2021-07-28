@@ -19,20 +19,25 @@ class SettingsWidget : public QWidget {
     Q_OBJECT
     Ui::SettingsWidget *ui;
 
-    std::function<bool(BaslerSettings::Settings setting, std::string)> mApplySettingCallback;
-    std::function<std::string(BaslerSettings::Settings setting)> mGetSettingCallback;
+    bool mInited = false;
+    int mCameraIndex = -1;
 
-    void connectWidgets();
-    void disconnectWidgets();
+    void mConnectWidgets();
+    void mDisconnectWidgets();
+
+    template<typename T>
+    T convert(const std::string&);
 
 public:
 
-    explicit SettingsWidget(QWidget *parent = nullptr);
+    std::function<void()> callback_closeSettings;
+    std::function<std::string(int, BaslerSettings::Settings setting)> callback_getSetting;
+    std::function<BaslerSettings::ErrorCode(int, BaslerSettings::Settings setting, std::string)> callback_setSetting;
+
+    explicit SettingsWidget(int cameraIndex,QWidget *parent = nullptr);
     ~SettingsWidget() override;
 
-    void setCallback(std::function<bool(BaslerSettings::Settings, std::string)> applySettingCallback);
-    void setCallback(std::function<std::string(BaslerSettings::Settings)> getSettingCallback);
-    void setSetting(std::string name, std::string value);
+    void updateValues();
 
 private slots:
 
@@ -44,11 +49,11 @@ private slots:
     void onFrameHeightSpinBoxValueChanged(int value);
     void onFrameWidthSliderValueChanged(int value);
     void onFrameWidthSpinBoxValueChanged(int value);
-    void onGainAutoComboBoxIndexChanged(int index);
-    void onGainMaxSpinBoxValueChanged(int value);
-    void onGainMinSpinBoxValueChanged(int value);
+    void onGainAutoComboBoxTextChanged(QString text);
+    void onGainMaxSpinBoxValueChanged(double value);
+    void onGainMinSpinBoxValueChanged(double value);
     void onGainSelectorComboBoxIndexChanged(int index);
-    void onGainSpinBoxValueChanged(int value);
+    void onGainSpinBoxValueChanged(double value);
     void onLoadUserSetButtonClicked();
     void onOffsetXSliderValueChanged(int value);
     void onOffsetXSpinBoxValueChanged(int value);
@@ -63,6 +68,8 @@ private slots:
 
 protected:
     void showEvent(QShowEvent *event) override;
+
+    void closeEvent(QCloseEvent *event) override;
 
 
 };

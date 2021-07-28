@@ -50,9 +50,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-249</y>
+        <y>0</y>
         <width>366</width>
-        <height>771</height>
+        <height>749</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -361,7 +361,7 @@
              </size>
             </property>
             <property name="maximum">
-             <double>120.000000000000000</double>
+             <double>100000.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -411,21 +411,6 @@
               <height>16777215</height>
              </size>
             </property>
-            <item>
-             <property name="text">
-              <string>Off</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Once</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Continuous</string>
-             </property>
-            </item>
            </widget>
           </item>
          </layout>
@@ -522,21 +507,6 @@
               <height>16777215</height>
              </size>
             </property>
-            <item>
-             <property name="text">
-              <string>Off</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Once</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Auto</string>
-             </property>
-            </item>
            </widget>
           </item>
          </layout>
@@ -578,21 +548,6 @@
               <height>16777215</height>
              </size>
             </property>
-            <item>
-             <property name="text">
-              <string>All</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Analog all</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Digital all</string>
-             </property>
-            </item>
            </widget>
           </item>
          </layout>
@@ -621,7 +576,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="gainSpinBox">
+           <widget class="QDoubleSpinBox" name="gainSpinBox">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -662,7 +617,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="gainMinSpinBox">
+           <widget class="QDoubleSpinBox" name="gainMinSpinBox">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -703,7 +658,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="gainMaxSpinBox">
+           <widget class="QDoubleSpinBox" name="gainMaxSpinBox">
             <property name="minimumSize">
              <size>
               <width>80</width>

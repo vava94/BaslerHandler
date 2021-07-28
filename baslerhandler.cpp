@@ -13,9 +13,6 @@ BaslerHandler::BaslerHandler() {
 
     PylonInitialize();
     mGrabThreads = nullptr;
-#ifdef  BASLERHANDLER_SETTINGS_GUI
-        settingsWidget = new SettingsWidget;
-#endif
 
 }
 
@@ -95,6 +92,15 @@ BaslerHandler::Frame* BaslerHandler::convertFormat(Frame *input, EPixelType pixe
     return frame;
 }
 
+#ifdef BASLERHANDLER_SETTINGS_GUI
+void BaslerHandler::closeSettings() {
+    if (settingsWidget != nullptr) {
+        settingsWidget->deleteLater();
+        settingsWidget = nullptr;
+    }
+}
+#endif
+
 void BaslerHandler::disconnectCamera(int index) {
     mCamerasArray[index].Close();
     if (mLogging) {
@@ -111,24 +117,8 @@ void BaslerHandler::disconnectCamera(int index) {
     }
 }
 
-std::string BaslerHandler::getCameraAddress(int index) {
-    if (index > (mCamerasArray.GetSize() - 1)) return "";
-    if (mCamerasArray[index].IsGigE()) {
-        return mCamerasArray[index].GetDeviceInfo().GetAddress().c_str();
-    }
-    else if (mCamerasArray[index].IsUsb()) {
-        return mCamerasArray[index].GetDeviceInfo().GetProductId().c_str();
-    }
-    else return "";
-}
-
 size_t BaslerHandler::getCamerasCount() {
     return mCamerasArray.GetSize();
-}
-
-std::string BaslerHandler::getCameraName(int index) {
-    if (index > (mCamerasArray.GetSize() - 1)) return "";
-    return mCamerasArray[index].GetDeviceInfo().GetModelName().c_str();
 }
 
 int BaslerHandler::getFrameHeight(int index) {
@@ -154,52 +144,81 @@ float BaslerHandler::getFPS(int cameraIndex) {
 }
 
 std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings setting) {
-
+    if (index >= mCamerasArray.GetSize()) return "";
     auto& cam = mCamerasArray[index];
     std::string value;
-    if(!cam.IsOpen()) {
+    if(!cam.IsOpen() && setting != BaslerSettings::CAMERA_NAME && setting != BaslerSettings::CAMERA_ADDRESS) {
         return value;
     }
     auto& nodeMap = cam.GetNodeMap();
     switch (setting) {
+        case BaslerSettings::ACQUISITION_FRAME_RATE: {
+            value = std::to_string(CFloatParameter(nodeMap, "AcquisitionFrameRate").GetValue());
+            break;
+        }
+        case BaslerSettings::CAMERA_ADDRESS: {
+            if (mCamerasArray[index].IsGigE()) {
+                value = mCamerasArray[index].GetDeviceInfo().GetAddress().c_str();
+            }
+            else if (mCamerasArray[index].IsUsb()) {
+                value = mCamerasArray[index].GetDeviceInfo().GetProductId().c_str();
+            }
+            break;
+        }
+        case BaslerSettings::CAMERA_NAME: {
+            value = mCamerasArray[index].GetDeviceInfo().GetModelName().c_str();
+            break;
+        }
         case BaslerSettings::EXPOSURE_AUTO: {
-            CEnumParameter gainAuto(nodeMap, "ExposureAuto");
-            value = gainAuto.GetValue();
+            value = CEnumParameter(nodeMap, "ExposureAuto").GetValue();
             break;
         }
         case BaslerSettings::EXPOSURE_AUTO_LIST: {
             StringList_t list;
-            CEnumParameter gainAuto(nodeMap, "ExposureAuto");
-            gainAuto.GetAllValues(list);
+            CEnumParameter nodeValue(nodeMap, "ExposureAuto");
+            nodeValue.GetAllValues(list);
             for (const auto& item : list) {
-                value.append(item.c_str());
-                value.append(",");
+                if (nodeValue.CanSetValue(item)) {
+                    value.append(item.c_str());
+                    value.append(",");
+                }
             }
             break;
         }
         case BaslerSettings::EXPOSURE_TIME: {
-            CIntegerParameter nodeValue(nodeMap, "ExposureTimeRaw");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetValue());
+            break;
+        }
+        case BaslerSettings::EXPOSURE_TIME_MAX: {
+            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetMax());
+            break;
+        }
+        case BaslerSettings::EXPOSURE_TIME_MIN: {
+            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetMin());
             break;
         }
         case BaslerSettings::FRAME_HEIGHT: {
-            CIntegerParameter nodeValue(nodeMap, "Width");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CIntegerParameter(nodeMap, "Height").GetValue());
+            break;
+        }
+        case BaslerSettings::FRAME_HEIGHT_MAX: {
+            value = std::to_string(CIntegerParameter(nodeMap, "Height").GetMax());
             break;
         }
         case BaslerSettings::FRAME_WIDTH: {
-            CIntegerParameter nodeValue(nodeMap, "Height");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CIntegerParameter(nodeMap, "Width").GetValue());
+            break;
+        }
+        case BaslerSettings::FRAME_WIDTH_MAX: {
+            value = std::to_string(CIntegerParameter(nodeMap, "Width").GetMax());
             break;
         }
         case BaslerSettings::GAIN: {
-            CIntegerParameter nodeValue(nodeMap, "GainRaw");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CFloatParameter(nodeMap, "Gain").GetValue());
             break;
         }
         case BaslerSettings::GAIN_AUTO: {
-            CEnumParameter nodeValue(nodeMap, "GainAuto");
-            value = nodeValue.GetValue();
+            value = CEnumParameter(nodeMap, "GainAuto").GetValue();
             break;
         }
         case BaslerSettings::GAIN_AUTO_LIST: {
@@ -207,24 +226,23 @@ std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings settin
             CEnumParameter nodeValue(nodeMap, "GainAuto");
             nodeValue.GetAllValues(list);
             for (const auto& item : list) {
-                value.append(item.c_str());
-                value.append(",");
+                if (nodeValue.CanSetValue(item)) {
+                    value.append(item.c_str());
+                    value.append(",");
+                }
             }
             break;
         }
         case BaslerSettings::GAIN_MAX: {
-            CIntegerParameter nodeValue(nodeMap, "AutoGainRawUpperLimit");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CFloatParameter(nodeMap, "AutoGainUpperLimit").GetValue());
             break;
         }
         case BaslerSettings::GAIN_MIN: {
-            CIntegerParameter nodeValue(nodeMap, "AutoGainRawLowerLimit");
-            value = std::to_string(nodeValue.GetValue());
+            value = std::to_string(CFloatParameter(nodeMap, "AutoGainLowerLimit").GetValue());
             break;
         }
         case BaslerSettings::GAIN_SELECTOR: {
-            CEnumParameter nodeValue(nodeMap, "GainSelector");
-            value = nodeValue.GetValue();
+            value = CEnumParameter(nodeMap, "GainSelector").GetValue();
             break;
         }
         case BaslerSettings::GAIN_SELECTOR_LIST: {
@@ -232,8 +250,10 @@ std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings settin
             CEnumParameter nodeValue(nodeMap, "GainSelector");
             nodeValue.GetAllValues(list);
             for (const auto& item : list) {
-                value.append(item.c_str());
-                value.append(",");
+                if (nodeValue.CanSetValue(item)) {
+                    value.append(item.c_str());
+                    value.append(",");
+                }
             }
             break;
         }
@@ -257,20 +277,41 @@ std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings settin
             CEnumParameter nodeValue(nodeMap, "PixelFormat");
             nodeValue.GetAllValues(list);
             for (const auto& item : list) {
-                value.append(item.c_str());
-                value.append(",");
+                if (nodeValue.CanSetValue(item)) {
+                    value.append(item.c_str());
+                    value.append(",");
+                }
             }
             break;
         }
         case BaslerSettings::UID: {
             CStringParameter nodeValue(nodeMap, "DeviceUserID");
+            break;
+        }
+        case BaslerSettings::USER_SET_DEFAULT: {
+            value = CEnumParameter(nodeMap, "UserSetDefault").GetValue();
+            break;
+        }
+        case BaslerSettings::USER_SET_SELECTOR: {
+            value = CEnumParameter(nodeMap, "UserSetSelector").GetValue();
+            break;
+        }
+        case BaslerSettings::USER_SET_SELECTOR_LIST: {
+            StringList_t list;
+            CEnumParameter nodeValue(nodeMap, "UserSetSelector");
+            nodeValue.GetAllValues(list);
+            for (const auto& item : list) {
+                if (nodeValue.CanSetValue(item)) {
+                    value.append(item.c_str());
+                    value.append(",");
+                }
+            }
+            break;
         }
         default: break;
     }
     return value;
 }
-
-
 
 bool BaslerHandler::isGrabbing(int index) {
     if (index == -1) {
@@ -409,7 +450,15 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
 
 #ifdef BASLERHANDLER_SETTINGS_GUI
 void BaslerHandler::showSettings(int cameraIndex) {
-
+    if (settingsWidget != nullptr) {
+            settingsWidget->activateWindow();
+        return;
+    }
+    settingsWidget = new SettingsWidget(cameraIndex);
+    settingsWidget->callback_closeSettings = [this] { closeSettings(); };
+    settingsWidget->callback_getSetting = std::bind(&BaslerHandler::getSetting, this, std::placeholders::_1, std::placeholders::_2);
+    settingsWidget->callback_setSetting = std::bind(&BaslerHandler::setSetting, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    settingsWidget->show();
 }
 #endif
 
@@ -510,8 +559,8 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
 
         }
         case BaslerSettings::FRAME_HEIGHT: {
-            auto node = nodeMap.GetNode("HeightMax");
-            int maxHeight = (int)CIntegerParameter(node).GetValue();
+            auto node = nodeMap.GetNode("Height");
+            int maxHeight = (int)CIntegerParameter(node).GetMax();
             node = nodeMap.GetNode("OffsetY");
             int offsetY = (int)CIntegerParameter(node).GetValue();
             size_t id;
@@ -531,7 +580,6 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                 err = BaslerSettings::VALUE_ERROR;
                 break;
             }
-            node = nodeMap.GetNode("Height");
             if (GenApi::IsWritable(node)) {
                 CIntegerParameter nodeValue(node);
                 if (nodeValue.TrySetValue(valueInt)) {
@@ -547,8 +595,8 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
             break;
         }
         case BaslerSettings::FRAME_WIDTH: {
-            auto node = nodeMap.GetNode("WidthMax");
-            int maxWidth = (int) CIntegerParameter(node).GetValue();
+            auto node = nodeMap.GetNode("Width");
+            int maxWidth = (int) CIntegerParameter(node).GetMax();
             node = nodeMap.GetNode("OffsetX");
             int offsetX = (int) CIntegerParameter(node).GetValue();
             size_t id;
@@ -568,7 +616,6 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                 err = BaslerSettings::VALUE_ERROR;
                 break;
             }
-            node = nodeMap.GetNode("Width");
             if (GenApi::IsWritable(node)) {
                 CIntegerParameter nodeValue(node);
                 if (nodeValue.TrySetValue(valueInt)) {
@@ -714,7 +761,7 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
             }
             break;
         }
-        case BaslerSettings::GAIN_SELECTOR:{
+        case BaslerSettings::GAIN_SELECTOR: {
             auto node = nodeMap.GetNode("GainSelector");
             if (GenApi::IsWritable(node)) {
                 CEnumParameter nodeValue(node);
@@ -743,25 +790,134 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
             }
             break;
         }
-        case BaslerSettings::LOAD_SET:
-            --> Заполнение настроек
-            //TODO
+        case BaslerSettings::LOAD_SET: {
+            auto node = nodeMap.GetNode("UserSetSelector");
+            CEnumParameter(node).SetValue(value.data());
+            CCommandParameter(nodeMap, "UserSetLoad").Execute();
+            err = BaslerSettings::OK;
+            // TODO: Отображение обновлённых настроек
             break;
-        case BaslerSettings::OFFSET_X:
-            //TODO
+        }
+        case BaslerSettings::OFFSET_X: {
+            auto node = nodeMap.GetNode("Width");
+            int maxWidth = (int) CIntegerParameter(node).GetMax();
+            int width = (int) CIntegerParameter(node).GetValue();
+            node = nodeMap.GetNode("OffsetX");
+            size_t id;
+            int valueInt;
+            try {
+                valueInt = std::stoi(value, &id, 10);
+            }
+            catch (...) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (id != value.size()) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (valueInt < 0 || valueInt > (maxWidth - width)) {
+                err = BaslerSettings::VALUE_ERROR;
+                break;
+            }
+            if (GenApi::IsWritable(node)) {
+                CIntegerParameter nodeValue(node);
+                if (nodeValue.TrySetValue(valueInt)) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::OFFSET_Y:
-            //TODO
+        }
+        case BaslerSettings::OFFSET_Y: {
+            auto node = nodeMap.GetNode("Height");
+            int maxHeight = (int) CIntegerParameter(node).GetMax();
+            int height = (int) CIntegerParameter(node).GetValue();
+            node = nodeMap.GetNode("OffsetY");
+            size_t id;
+            int valueInt;
+            try {
+                valueInt = std::stoi(value, &id, 10);
+            }
+            catch (...) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (id != value.size()) {
+                err = BaslerSettings::VALUE_TYPE_ERROR;
+                break;
+            }
+            if (valueInt < 0 || valueInt > (maxHeight - height)) {
+                err = BaslerSettings::VALUE_ERROR;
+                break;
+            }
+            if (GenApi::IsWritable(node)) {
+                CIntegerParameter nodeValue(node);
+                if (nodeValue.TrySetValue(valueInt)) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::PIXEL_FORMAT:
-            //TODO
+        }
+        case BaslerSettings::PIXEL_FORMAT: {
+            auto node = nodeMap.GetNode("PixelFormat");
+            if (GenApi::IsWritable(node)) {
+                CEnumParameter nodeValue(node);
+                StringList_t list;
+                nodeValue.GetAllValues(list);
+                /// check setting value with available values
+                err = BaslerSettings::VALUE_ERROR;
+                for (const auto &item : list) {
+                    if (std::strcmp(item, value.c_str()) == 0) {
+                        err = BaslerSettings::OK;
+                        break;
+                    }
+                }
+                if (err != BaslerSettings::OK) {
+                    break;
+                }
+                /// Trying to set value
+                if (nodeValue.TrySetValue(value.data())) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
-        case BaslerSettings::SAVE_SET:
-            //TODO
+        }
+        case BaslerSettings::SAVE_SET: {
+            auto node = nodeMap.GetNode("UserSetSelector");
+            CEnumParameter(node).SetValue(value.data());
+            CCommandParameter(nodeMap, "UserSetSave").Execute();
+            err = BaslerSettings::OK;
             break;
-        case BaslerSettings::UID:
-            //TODO
+        }
+        case BaslerSettings::UID: {
+            auto node = nodeMap.GetNode("DeviceUserID");
+            if (GenApi::IsWritable(node)) {
+                if (CStringParameter(node).TrySetValue(value.data())) {
+                    err = BaslerSettings::OK;
+                } else {
+                    err = BaslerSettings::ERROR_WRITING_VALUE;
+                }
+            }
+            else {
+                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+            }
             break;
+        }
         default:
             return BaslerSettings::NO_SUCH_SETTING;
     }

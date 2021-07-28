@@ -53,17 +53,17 @@ public:
 
     bool connectCamera(int index);
 
+#ifdef BASLERHANDLER_SETTINGS_GUI
+    void closeSettings();
+#endif
+
     static Frame* convertFormat(Frame *input, EPixelType pixelType);
 
     void disconnectCamera(int index);
 
     [[maybe_unused]] void enableLogging(bool enable);
 
-    std::string getCameraAddress(int index);
-
     size_t getCamerasCount();
-
-    std::string getCameraName(int index);
 
     int getFrameHeight(int index);
 
@@ -72,8 +72,6 @@ public:
     float getFPS(int cameraIndex);
 
     std::string getSetting(int cameraIndex, BaslerSettings::Settings setting);
-
-
 
     /**
      * Check camera for grabbing.
@@ -104,7 +102,7 @@ private:
     bool mLogging = false;
     int mGrabbersSize = 0;
     CInstantCameraArray mCamerasArray;
-    SettingsWidget *settingsWidget;
+    SettingsWidget *settingsWidget = nullptr;
     std::function<void(int, Frame*)> frameCallback = nullptr;
     std::function<void(std::string, int)> log = nullptr;
     std::vector<float> frameRates;
