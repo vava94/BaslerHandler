@@ -43,8 +43,10 @@ private slots:
 
     void onConfSetComboBoxIndexChanged(int index);
     void onExposureAutoComboBoxTextChanged(const QString& text);
+    void onExposureAutoMaxSpinBoxValueChanged(double value);
+    void onExposureAutoMinSpinBoxValueChanged(double value);
     void onExposureTimeSliderValueChanged(int value);
-    void onExposureTimeSpinBoxValueChanged(int value);
+    void onExposureTimeSpinBoxValueChanged(double value);
     void onFrameHeightSliderValueChanged(int value);
     void onFrameHeightSpinBoxValueChanged(int value);
     void onFrameWidthSliderValueChanged(int value);
@@ -61,7 +63,7 @@ private slots:
     void onOffsetYSpinBoxValueChanged(int value);
     void onPixelFormatComboBoxIndexChanged(int index);
     void onSaveUserSetButtonClicked();
-
+    void onShutterComboBoxTextChanged(const QString& text);
     void onStartupSetComboCoxIndexChanged(int index);
     void onTargetFPSSpinBoxValueChanged(double value);
     void onUidLineEditTextEdited(const QString& text);

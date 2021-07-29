@@ -61,7 +61,7 @@ public:
 
     void disconnectCamera(int index);
 
-    [[maybe_unused]] void enableLogging(bool enable);
+    void enableLogging(bool enable);
 
     size_t getCamerasCount();
 

@@ -3,11 +3,12 @@
  * https://github.com/vava94/BaslerHandler
  * vitkiselyov@gmail.com
  */
-
+/**
+ * TODO: Process abs and raw values in some settings
+ */
 #include "baslerhandler.hpp"
 #include <utility>
 #define PYLON_TAG "Pylon: "
-
 
 BaslerHandler::BaslerHandler() {
 
@@ -109,7 +110,7 @@ void BaslerHandler::disconnectCamera(int index) {
     }
 }
 
-[[maybe_unused]] void BaslerHandler::enableLogging(bool enable) {
+void BaslerHandler::enableLogging(bool enable) {
     if (log == nullptr) {
         mLogging = false;
     } else {
@@ -126,8 +127,7 @@ int BaslerHandler::getFrameHeight(int index) {
         return -1;
     }
     INodeMap &nodeMap = mCamerasArray[index].GetNodeMap();
-    CIntegerParameter width(nodeMap, "Height");
-    return (int) width.GetValue();
+    return (int) CIntegerParameter(nodeMap, "Height").GetValue();
 }
 
 int BaslerHandler::getFrameWidth(int index) {
@@ -135,8 +135,7 @@ int BaslerHandler::getFrameWidth(int index) {
         return -1;
     }
     INodeMap &nodeMap = mCamerasArray[index].GetNodeMap();
-    CIntegerParameter width(nodeMap, "Width");
-    return (int) width.GetValue();
+    return (int) CIntegerParameter(nodeMap, "Width").GetValue();
 }
 
 float BaslerHandler::getFPS(int cameraIndex) {
@@ -150,167 +149,285 @@ std::string BaslerHandler::getSetting(int index, BaslerSettings::Settings settin
     if(!cam.IsOpen() && setting != BaslerSettings::CAMERA_NAME && setting != BaslerSettings::CAMERA_ADDRESS) {
         return value;
     }
-    auto& nodeMap = cam.GetNodeMap();
-    switch (setting) {
-        case BaslerSettings::ACQUISITION_FRAME_RATE: {
-            value = std::to_string(CFloatParameter(nodeMap, "AcquisitionFrameRate").GetValue());
-            break;
-        }
-        case BaslerSettings::CAMERA_ADDRESS: {
-            if (mCamerasArray[index].IsGigE()) {
-                value = mCamerasArray[index].GetDeviceInfo().GetAddress().c_str();
+    try {
+        auto &nodeMap = cam.GetNodeMap();
+        switch (setting) {
+            case BaslerSettings::ACQUISITION_FRAME_RATE: {
+                value = std::to_string(CFloatParameter(nodeMap, "AcquisitionFrameRate").GetValue());
+                break;
             }
-            else if (mCamerasArray[index].IsUsb()) {
-                value = mCamerasArray[index].GetDeviceInfo().GetProductId().c_str();
-            }
-            break;
-        }
-        case BaslerSettings::CAMERA_NAME: {
-            value = mCamerasArray[index].GetDeviceInfo().GetModelName().c_str();
-            break;
-        }
-        case BaslerSettings::EXPOSURE_AUTO: {
-            value = CEnumParameter(nodeMap, "ExposureAuto").GetValue();
-            break;
-        }
-        case BaslerSettings::EXPOSURE_AUTO_LIST: {
-            StringList_t list;
-            CEnumParameter nodeValue(nodeMap, "ExposureAuto");
-            nodeValue.GetAllValues(list);
-            for (const auto& item : list) {
-                if (nodeValue.CanSetValue(item)) {
-                    value.append(item.c_str());
-                    value.append(",");
+            case BaslerSettings::CAMERA_ADDRESS: {
+                if (mCamerasArray[index].IsGigE()) {
+                    value = mCamerasArray[index].GetDeviceInfo().GetAddress().c_str();
                 }
-            }
-            break;
-        }
-        case BaslerSettings::EXPOSURE_TIME: {
-            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetValue());
-            break;
-        }
-        case BaslerSettings::EXPOSURE_TIME_MAX: {
-            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetMax());
-            break;
-        }
-        case BaslerSettings::EXPOSURE_TIME_MIN: {
-            value = std::to_string(CIntegerParameter(nodeMap, "ExposureTimeRaw").GetMin());
-            break;
-        }
-        case BaslerSettings::FRAME_HEIGHT: {
-            value = std::to_string(CIntegerParameter(nodeMap, "Height").GetValue());
-            break;
-        }
-        case BaslerSettings::FRAME_HEIGHT_MAX: {
-            value = std::to_string(CIntegerParameter(nodeMap, "Height").GetMax());
-            break;
-        }
-        case BaslerSettings::FRAME_WIDTH: {
-            value = std::to_string(CIntegerParameter(nodeMap, "Width").GetValue());
-            break;
-        }
-        case BaslerSettings::FRAME_WIDTH_MAX: {
-            value = std::to_string(CIntegerParameter(nodeMap, "Width").GetMax());
-            break;
-        }
-        case BaslerSettings::GAIN: {
-            value = std::to_string(CFloatParameter(nodeMap, "Gain").GetValue());
-            break;
-        }
-        case BaslerSettings::GAIN_AUTO: {
-            value = CEnumParameter(nodeMap, "GainAuto").GetValue();
-            break;
-        }
-        case BaslerSettings::GAIN_AUTO_LIST: {
-            StringList_t list;
-            CEnumParameter nodeValue(nodeMap, "GainAuto");
-            nodeValue.GetAllValues(list);
-            for (const auto& item : list) {
-                if (nodeValue.CanSetValue(item)) {
-                    value.append(item.c_str());
-                    value.append(",");
+                else if (mCamerasArray[index].IsUsb()) {
+                    value = mCamerasArray[index].GetDeviceInfo().GetProductId().c_str();
                 }
+                break;
             }
-            break;
-        }
-        case BaslerSettings::GAIN_MAX: {
-            value = std::to_string(CFloatParameter(nodeMap, "AutoGainUpperLimit").GetValue());
-            break;
-        }
-        case BaslerSettings::GAIN_MIN: {
-            value = std::to_string(CFloatParameter(nodeMap, "AutoGainLowerLimit").GetValue());
-            break;
-        }
-        case BaslerSettings::GAIN_SELECTOR: {
-            value = CEnumParameter(nodeMap, "GainSelector").GetValue();
-            break;
-        }
-        case BaslerSettings::GAIN_SELECTOR_LIST: {
-            StringList_t list;
-            CEnumParameter nodeValue(nodeMap, "GainSelector");
-            nodeValue.GetAllValues(list);
-            for (const auto& item : list) {
-                if (nodeValue.CanSetValue(item)) {
-                    value.append(item.c_str());
-                    value.append(",");
+            case BaslerSettings::CAMERA_NAME: {
+                value = mCamerasArray[index].GetDeviceInfo().GetModelName().c_str();
+                break;
+            }
+            case BaslerSettings::EXPOSURE_AUTO: {
+                value = CEnumParameter(nodeMap, "ExposureAuto").GetValue();
+                break;
+            }
+            case BaslerSettings::EXPOSURE_AUTO_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "ExposureAuto");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
                 }
+                break;
             }
-            break;
-        }
-        case BaslerSettings::OFFSET_X: {
-            CIntegerParameter nodeValue(nodeMap, "OffsetX");
-            value = std::to_string(nodeValue.GetValue());
-            break;
-        }
-        case BaslerSettings::OFFSET_Y: {
-            CIntegerParameter nodeValue(nodeMap, "OffsetY");
-            value = std::to_string(nodeValue.GetValue());
-            break;
-        }
-        case BaslerSettings::PIXEL_FORMAT: {
-            CEnumParameter nodeValue(nodeMap, "PixelFormat");
-            value = nodeValue.GetValue();
-            break;
-        }
-        case BaslerSettings::PIXEL_FORMATS_LIST: {
-            StringList_t list;
-            CEnumParameter nodeValue(nodeMap, "PixelFormat");
-            nodeValue.GetAllValues(list);
-            for (const auto& item : list) {
-                if (nodeValue.CanSetValue(item)) {
-                    value.append(item.c_str());
-                    value.append(",");
+            case BaslerSettings::EXPOSURE_AUTO_TIME_MAX: {
+                value = std::to_string(CFloatParameter(nodeMap, "AutoExposureTimeUpperLimit").GetValue());
+                break;
+            }
+            case BaslerSettings::EXPOSURE_AUTO_TIME_MIN: {
+                value = std::to_string(CFloatParameter(nodeMap, "AutoExposureTimeLowerLimit").GetMin());
+                break;
+            }
+            case BaslerSettings::EXPOSURE_TIME: {
+                value = std::to_string(CFloatParameter(nodeMap, "ExposureTime").GetValue());
+                break;
+            }
+            case BaslerSettings::EXPOSURE_TIME_MAX: {
+                value = std::to_string(CFloatParameter(nodeMap, "ExposureTime").GetMax());
+                break;
+            }
+            case BaslerSettings::EXPOSURE_TIME_MIN: {
+                value = std::to_string(CFloatParameter(nodeMap, "ExposureTime").GetMin());
+                break;
+            }
+            case BaslerSettings::FRAME_HEIGHT: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Height").GetValue());
+                break;
+            }
+            case BaslerSettings::FRAME_HEIGHT_MAX: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Height").GetMax());
+                break;
+            }
+            case BaslerSettings::FRAME_HEIGHT_MIN: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Height").GetMin());
+                break;
+            }
+            case BaslerSettings::FRAME_WIDTH: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Width").GetValue());
+                break;
+            }
+            case BaslerSettings::FRAME_WIDTH_MAX: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Width").GetMax());
+                break;
+            }
+            case BaslerSettings::FRAME_WIDTH_MIN: {
+                value = std::to_string(CIntegerParameter(nodeMap, "Width").GetMin());
+                break;
+            }
+            case BaslerSettings::GAIN: {
+                value = std::to_string(CFloatParameter(nodeMap, "Gain").GetValue());
+                break;
+            }
+            case BaslerSettings::GAIN_AUTO: {
+                value = CEnumParameter(nodeMap, "GainAuto").GetValue();
+                break;
+            }
+            case BaslerSettings::GAIN_AUTO_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "GainAuto");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
                 }
+                break;
             }
-            break;
-        }
-        case BaslerSettings::UID: {
-            CStringParameter nodeValue(nodeMap, "DeviceUserID");
-            break;
-        }
-        case BaslerSettings::USER_SET_DEFAULT: {
-            value = CEnumParameter(nodeMap, "UserSetDefault").GetValue();
-            break;
-        }
-        case BaslerSettings::USER_SET_SELECTOR: {
-            value = CEnumParameter(nodeMap, "UserSetSelector").GetValue();
-            break;
-        }
-        case BaslerSettings::USER_SET_SELECTOR_LIST: {
-            StringList_t list;
-            CEnumParameter nodeValue(nodeMap, "UserSetSelector");
-            nodeValue.GetAllValues(list);
-            for (const auto& item : list) {
-                if (nodeValue.CanSetValue(item)) {
-                    value.append(item.c_str());
-                    value.append(",");
+            case BaslerSettings::GAIN_AUTO_MAX: {
+                value = std::to_string(CFloatParameter(nodeMap, "AutoGainUpperLimit").GetValue());
+                break;
+            }
+            case BaslerSettings::GAIN_AUTO_MIN: {
+                value = std::to_string(CFloatParameter(nodeMap, "AutoGainLowerLimit").GetValue());
+                break;
+            }
+            case BaslerSettings::GAIN_MAX: {
+                value = std::to_string(CFloatParameter(nodeMap, "Gain").GetMax());
+                break;
+            }
+            case BaslerSettings::GAIN_MIN: {
+                value = std::to_string(CFloatParameter(nodeMap, "Gain").GetMin());
+                break;
+            }
+            case BaslerSettings::GAIN_SELECTOR: {
+                value = CEnumParameter(nodeMap, "GainSelector").GetValue();
+                break;
+            }
+            case BaslerSettings::GAIN_SELECTOR_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "GainSelector");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
                 }
+                break;
             }
-            break;
+            case BaslerSettings::OFFSET_X: {
+                value = std::to_string(CIntegerParameter(nodeMap, "OffsetX").GetValue());
+                break;
+            }
+            case BaslerSettings::OFFSET_Y: {
+                value = std::to_string(CIntegerParameter(nodeMap, "OffsetY").GetValue());
+                break;
+            }
+            case BaslerSettings::PIXEL_FORMAT: {
+                CEnumParameter nodeValue(nodeMap, "PixelFormat");
+                value = nodeValue.GetValue();
+                break;
+            }
+            case BaslerSettings::PIXEL_FORMATS_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "PixelFormat");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
+                }
+                break;
+            }
+            case BaslerSettings::SHUTTER_MODE_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "SensorShutterMode");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
+                }
+                break;
+            }
+            case BaslerSettings::SHUTTER_MODE: {
+                value = CEnumParameter(nodeMap, "SensorShutterMode").GetValue();
+                break;
+            }
+            case BaslerSettings::UID: {
+                CStringParameter nodeValue(nodeMap, "DeviceUserID");
+                break;
+            }
+            case BaslerSettings::USER_SET_DEFAULT: {
+                value = CEnumParameter(nodeMap, "UserSetDefault").GetValue();
+                break;
+            }
+            case BaslerSettings::USER_SET_SELECTOR: {
+                value = CEnumParameter(nodeMap, "UserSetSelector").GetValue();
+                break;
+            }
+            case BaslerSettings::USER_SET_SELECTOR_LIST: {
+                StringList_t list;
+                CEnumParameter nodeValue(nodeMap, "UserSetSelector");
+                nodeValue.GetAllValues(list);
+                for (const auto& item : list) {
+                    if (nodeValue.CanSetValue(item)) {
+                        value.append(item.c_str());
+                        value.append(",");
+                    }
+                }
+                break;
+            }
+            default: break;
         }
-        default: break;
+    } catch (GenICam_3_1_Basler_pylon::GenericException e) {
+        if (mLogging) {
+            std::string errStr = e.what();
+            log(PYLON_TAG + errStr, 2);
+        }
+        value = "";
     }
     return value;
+}
+
+void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
+
+    auto &cam = mCamerasArray[cameraIndex];
+    CGrabResultPtr ptrGrabResult;
+    CImageFormatConverter formatConverter;
+    CPylonImage pylonImage;
+    float currFps;
+    int arrayPos = 0;
+    long frameTimes[10] = {0};
+    size_t bufferSize;
+
+
+    Frame grabFrame{
+            .exposureTime = 0,
+            .width = getFrameWidth(cameraIndex),
+            .height = getFrameHeight(cameraIndex),
+            .channels = 0,
+            .pixelType = pixelType,
+            .data = nullptr
+    };
+    try {
+        if (!cam.IsOpen()) cam.Open();
+        formatConverter.OutputPixelFormat.SetValue(pixelType);
+        cam.StartGrabbing(GrabStrategy_LatestImageOnly);
+        if (mLogging) {
+            log(PYLON_TAG "Grab started from camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) +
+                ".", 0);
+        }
+        cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+        formatConverter.Convert(pylonImage, ptrGrabResult);
+        grabFrame.data = new uint8_t[pylonImage.GetAllocatedBufferSize()];
+        bufferSize = pylonImage.GetAllocatedBufferSize();
+        grabFrame.channels = bufferSize / (grabFrame.width * grabFrame.height);
+        grabFrame.size = bufferSize;
+        auto startPoint = std::chrono::high_resolution_clock::now();
+        while (cam.IsGrabbing()) {
+
+            cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+            frameTimes[arrayPos] = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - startPoint)).count();
+            startPoint = std::chrono::high_resolution_clock::now();
+            if (arrayPos == 9) {
+                memcpy(frameTimes, &frameTimes[1], sizeof(int) * 9);
+            }
+            if (arrayPos < 9) arrayPos++;
+            for (auto frameTime : frameTimes) {
+                currFps += (float)frameTime;
+            }
+            frameRates[cameraIndex] = 1000.0f / (currFps * 0.1f);
+            currFps = 0;
+            char *endChar;
+            grabFrame.exposureTime = (int) std::strtol(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str(), &endChar, 10);
+            /// TODO: Delete
+            //grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
+            formatConverter.Convert(pylonImage, ptrGrabResult);
+            memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
+            frameCallback(cameraIndex, &grabFrame);
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+        }
+    } catch (const GenericException &e) {
+        if (mLogging) {
+            log(PYLON_TAG "An error has occurred.", 2);
+            log(PYLON_TAG + std::string(e.GetDescription()), 2);
+        }
+    }
+    if (mLogging) {
+        log(PYLON_TAG "Capture form camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) + " stopped.",
+            0);
+    }
+    std::cout << "grab stopped" << std::endl;
 }
 
 bool BaslerHandler::isGrabbing(int index) {
@@ -376,78 +493,6 @@ size_t BaslerHandler::refreshCameras() {
     return mCamerasArray.GetSize();
 }
 
-void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
-
-    auto &cam = mCamerasArray[cameraIndex];
-    CGrabResultPtr ptrGrabResult;
-    CImageFormatConverter formatConverter;
-    CPylonImage pylonImage;
-    float currFps;
-    int arrayPos = 0;
-    long frameTimes[10] = {0};
-    size_t bufferSize;
-
-
-    Frame grabFrame{
-        .exposureTime = 0,
-        .width = getFrameWidth(cameraIndex),
-        .height = getFrameHeight(cameraIndex),
-        .channels = 0,
-        .pixelType = pixelType,
-        .data = nullptr
-    };
-    try {
-        if (!cam.IsOpen()) cam.Open();
-        formatConverter.OutputPixelFormat.SetValue(pixelType);
-        cam.StartGrabbing(GrabStrategy_LatestImageOnly);
-        if (mLogging) {
-            log(PYLON_TAG "Grab started from camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) +
-                ".", 0);
-        }
-        cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
-        formatConverter.Convert(pylonImage, ptrGrabResult);
-        grabFrame.data = new uint8_t[pylonImage.GetAllocatedBufferSize()];
-        bufferSize = pylonImage.GetAllocatedBufferSize();
-        grabFrame.channels = bufferSize / (grabFrame.width * grabFrame.height);
-        grabFrame.size = bufferSize;
-        auto startPoint = std::chrono::high_resolution_clock::now();
-        while (cam.IsGrabbing()) {
-
-            cam.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
-            frameTimes[arrayPos] = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - startPoint)).count();
-            startPoint = std::chrono::high_resolution_clock::now();
-            if (arrayPos == 9) {
-                memcpy(frameTimes, &frameTimes[1], sizeof(int) * 9);
-            }
-            if (arrayPos < 9) arrayPos++;
-            for (auto frameTime : frameTimes) {
-                currFps += (float)frameTime;
-            }
-            frameRates[cameraIndex] = 1000.0f / (currFps * 0.1f);
-            currFps = 0;
-            char *endChar;
-            grabFrame.exposureTime = (int) std::strtol(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str(), &endChar, 10);
-            /// TODO: Delete
-            //grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
-            formatConverter.Convert(pylonImage, ptrGrabResult);
-            memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
-            frameCallback(cameraIndex, &grabFrame);
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-
-        }
-    } catch (const GenericException &e) {
-        if (mLogging) {
-            log(PYLON_TAG "An error has occurred.", 2);
-            log(PYLON_TAG + std::string(e.GetDescription()), 2);
-        }
-    }
-    if (mLogging) {
-        log(PYLON_TAG "Capture form camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) + " stopped.",
-            0);
-    }
-    std::cout << "grab stopped" << std::endl;
-}
-
 #ifdef BASLERHANDLER_SETTINGS_GUI
 void BaslerHandler::showSettings(int cameraIndex) {
     if (settingsWidget != nullptr) {
@@ -480,446 +525,577 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
         }
         return BaslerSettings::ErrorCode::CAM_IS_CLOSED;
     }
-    auto& nodeMap = cam.GetNodeMap();
     BaslerSettings::ErrorCode err;
+    try {
+       auto &nodeMap = cam.GetNodeMap();
+       switch (name) {
+           case BaslerSettings::ACQUISITION_FRAME_RATE: {
+               auto node = nodeMap.GetNode("AcquisitionFrameRate");
+               auto valMax = CFloatParameter(node).GetMax();
+               auto valMin = CFloatParameter(node).GetMin();
 
-    switch(name) {
-        case BaslerSettings::EXPOSURE_AUTO: {
-            auto node = nodeMap.GetNode("ExposureAuto");
-            if (GenApi::IsWritable(node)) {
-                CEnumParameter nodeValue(node);
-                StringList_t list;
-                nodeValue.GetAllValues(list);
-                /// check setting value with available values
-                err = BaslerSettings::VALUE_ERROR;
-                for (const auto& item : list) {
-                    if (std::strcmp(item, value.c_str()) == 0) {
-                        err = BaslerSettings::OK;
-                        break;
-                    }
-                }
-                if (err != BaslerSettings::OK) {
-                    break;
-                }
-                /// Trying to set value
-                if (nodeValue.TrySetValue(value.data())) {
-                    err = BaslerSettings::OK;
-                }
-                else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::EXPOSURE_TIME: {
+               size_t id;
+               typeof(valMax) valueSet;
 
-            auto node = nodeMap.GetNode("ExposureAuto");
-            CEnumParameter nodeValue(node);
-            if (nodeValue.GetValue() != OFF) {
-                if (mLogging) {
-                    log(LOG_TAG "Turn off \"ExposureAuto\" setting.", 2);
-                }
-                err = BaslerSettings::SETTING_NOT_AVAILABLE;
-                break;
-            }
-            int valueInt;
-            size_t id;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-           catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-           }
-           if (id != value.size()) {
-               err = BaslerSettings::VALUE_TYPE_ERROR;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
                break;
            }
-            node = nodeMap.GetNode("ExposureTimeRaw");
-            CIntegerParameter val1(node);
-            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
-                return BaslerSettings::VALUE_ERROR;
-            }
+           case BaslerSettings::EXPOSURE_AUTO: {
+               auto node = nodeMap.GetNode("ExposureAuto");
+               if (GenApi::IsWritable(node)) {
+                   CEnumParameter nodeValue(node);
+                   StringList_t list;
+                   nodeValue.GetAllValues(list);
+                   /// check setting value with available values
+                   err = BaslerSettings::VALUE_ERROR;
+                   for (const auto &item : list) {
+                       if (std::strcmp(item, value.c_str()) == 0) {
+                           err = BaslerSettings::OK;
+                           break;
+                       }
+                   }
+                   if (err != BaslerSettings::OK) {
+                       break;
+                   }
+                   /// Trying to set value
+                   if (nodeValue.TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::EXPOSURE_AUTO_TIME_MAX: {
 
-            if (GenApi::IsWritable(node)) {
-                if (val1.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                }
-                else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
+               auto node = nodeMap.GetNode("AutoExposureTimeUpperLimit");
+               auto valMax = CFloatParameter(nodeMap, "ExposureTime").GetMax();
+               auto valMin = CFloatParameter(nodeMap, "AutoExposureTimeLowerLimit").GetValue();
+               typeof(valMax) valueSet;
 
-        }
-        case BaslerSettings::FRAME_HEIGHT: {
-            auto node = nodeMap.GetNode("Height");
-            int maxHeight = (int)CIntegerParameter(node).GetMax();
-            node = nodeMap.GetNode("OffsetY");
-            int offsetY = (int)CIntegerParameter(node).GetValue();
-            size_t id;
-            int valueInt;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...)  {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (valueInt < 0 || valueInt > (maxHeight - offsetY)) {
-                err = BaslerSettings::VALUE_ERROR;
-                break;
-            }
-            if (GenApi::IsWritable(node)) {
-                CIntegerParameter nodeValue(node);
-                if (nodeValue.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                }
-                else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::FRAME_WIDTH: {
-            auto node = nodeMap.GetNode("Width");
-            int maxWidth = (int) CIntegerParameter(node).GetMax();
-            node = nodeMap.GetNode("OffsetX");
-            int offsetX = (int) CIntegerParameter(node).GetValue();
-            size_t id;
-            int valueInt;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (valueInt < 0 || valueInt > (maxWidth - offsetX)) {
-                err = BaslerSettings::VALUE_ERROR;
-                break;
-            }
-            if (GenApi::IsWritable(node)) {
-                CIntegerParameter nodeValue(node);
-                if (nodeValue.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::GAIN: {
+               size_t id;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::EXPOSURE_AUTO_TIME_MIN: {
 
-            auto node = nodeMap.GetNode("AutoGainRawUpperLimit");
-            int valMax = (int) CIntegerParameter(node).GetValue();
-            node = nodeMap.GetNode("AutoGainRawLowerLimit");
-            int valMin = (int) CIntegerParameter(node).GetValue();
+               auto node = nodeMap.GetNode("AutoExposureTimeLowerLimit");
+               auto valMax = CFloatParameter(nodeMap, "AutoExposureTimeUpperLimit").GetValue();
+               auto valMin = CFloatParameter(nodeMap, "ExposureTime").GetMin();
+               typeof(valMax) valueSet;
 
-            size_t id;
-            int valueInt;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (valueInt < valMin || valueInt > valMax) {
-                err = BaslerSettings::VALUE_ERROR;
-                break;
-            }
-            node = nodeMap.GetNode("Width");
-            if (GenApi::IsWritable(node)) {
-                CIntegerParameter nodeValue(node);
-                if (nodeValue.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            } else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::GAIN_AUTO: {
-            auto node = nodeMap.GetNode("GainAuto");
-            if (GenApi::IsWritable(node)) {
-                CEnumParameter nodeValue(node);
-                StringList_t list;
-                nodeValue.GetAllValues(list);
-                /// check setting value with available values
-                err = BaslerSettings::VALUE_ERROR;
-                for (const auto &item : list) {
-                    if (std::strcmp(item, value.c_str()) == 0) {
-                        err = BaslerSettings::OK;
-                        break;
-                    }
-                }
-                if (err != BaslerSettings::OK) {
-                    break;
-                }
-                /// Trying to set value
-                if (nodeValue.TrySetValue(value.data())) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::GAIN_MAX:{
-            int valueInt;
-            size_t id;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            auto node = nodeMap.GetNode("AutoGainUpperLimit");
-            CIntegerParameter val1(node);
-            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
-                return BaslerSettings::VALUE_ERROR;
-            }
+               size_t id;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::EXPOSURE_TIME: {
 
-            if (GenApi::IsWritable(node)) {
-                if (val1.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                }
-                else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::GAIN_MIN:{
-            int valueInt;
-            size_t id;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            auto node = nodeMap.GetNode("AutoGainLowerLimit");
-            CIntegerParameter val1(node);
-            if (valueInt < val1.GetMin() || valueInt > val1.GetMax()) {
-                return BaslerSettings::VALUE_ERROR;
-            }
+               if (CEnumParameter(nodeMap, "ExposureAuto").GetValue() != "Off") {
+                   if (mLogging) {
+                       log(LOG_TAG "Turn off \"ExposureAuto\" setting.", 2);
+                   }
+                   err = BaslerSettings::SETTING_NOT_AVAILABLE;
+                   break;
+               }
+               double valueSet;
+               size_t id;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               auto node = nodeMap.GetNode("ExposureTime");
+               CFloatParameter nodeValue(node);
+               if (valueSet < nodeValue.GetMin() || valueSet > nodeValue.GetMax()) {
+                   return BaslerSettings::VALUE_ERROR;
+               }
 
-            if (GenApi::IsWritable(node)) {
-                if (val1.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                }
-                else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
+               if (GenApi::IsWritable(node)) {
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+
+           }
+           case BaslerSettings::FRAME_HEIGHT: {
+               auto node = nodeMap.GetNode("Height");
+               int maxHeight = (int) CIntegerParameter(node).GetMax();
+               int offsetY = (int) CIntegerParameter(nodeMap, "OffsetY").GetValue();
+               size_t id;
+               int valueSet;
+               try {
+                   valueSet = std::stoi(value, &id, 10);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < 0 || valueSet > (maxHeight - offsetY)) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CIntegerParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::FRAME_WIDTH: {
+               auto node = nodeMap.GetNode("Width");
+               int maxWidth = (int) CIntegerParameter(node).GetMax();
+               int offsetX = (int) CIntegerParameter(nodeMap, "OffsetX").GetValue();
+               size_t id;
+               int valueSet;
+               try {
+                   valueSet = std::stoi(value, &id, 10);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < 0 || valueSet > (maxWidth - offsetX)) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CIntegerParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::GAIN: {
+
+               auto node = nodeMap.GetNode("AutoGainUpperLimit");
+               auto valMax = CFloatParameter(node).GetValue();
+               node = nodeMap.GetNode("AutoGainLowerLimit");
+               auto valMin = CFloatParameter(node).GetValue();
+
+               size_t id;
+               typeof(valMax) valueSet;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               node = nodeMap.GetNode("Gain");
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::GAIN_AUTO: {
+               auto node = nodeMap.GetNode("GainAuto");
+               if (GenApi::IsWritable(node)) {
+                   CEnumParameter nodeValue(node);
+                   StringList_t list;
+                   nodeValue.GetAllValues(list);
+                   /// check setting value with available values
+                   err = BaslerSettings::VALUE_ERROR;
+                   for (const auto &item : list) {
+                       if (std::strcmp(item, value.c_str()) == 0) {
+                           err = BaslerSettings::OK;
+                           break;
+                       }
+                   }
+                   if (err != BaslerSettings::OK) {
+                       break;
+                   }
+                   /// Trying to set value
+                   if (nodeValue.TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::GAIN_AUTO_MAX: {
+
+               auto node = nodeMap.GetNode("AutoGainUpperLimit");
+               auto valMax = CFloatParameter(nodeMap, "Gain").GetMax();
+               auto valMin = CFloatParameter(nodeMap, "AutoGainLowerLimit").GetValue();
+               typeof(valMax) valueSet;
+
+               size_t id;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::GAIN_AUTO_MIN: {
+
+               auto node = nodeMap.GetNode("AutoGainLowerLimit");
+               auto valMax = CFloatParameter(nodeMap, "AutoGainUpperLimit").GetValue();
+               auto valMin = CFloatParameter(nodeMap, "Gain").GetMin();
+               typeof(valMax) valueSet;
+
+               size_t id;
+               try {
+                   valueSet = std::stod(value, &id);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueSet < valMin || valueSet > valMax) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CFloatParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueSet)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::GAIN_SELECTOR: {
+               auto node = nodeMap.GetNode("GainSelector");
+               if (GenApi::IsWritable(node)) {
+                   CEnumParameter nodeValue(node);
+                   StringList_t list;
+                   nodeValue.GetAllValues(list);
+                   /// check setting value with available values
+                   err = BaslerSettings::VALUE_ERROR;
+                   for (const auto &item : list) {
+                       if (std::strcmp(item, value.c_str()) == 0) {
+                           err = BaslerSettings::OK;
+                           break;
+                       }
+                   }
+                   if (err != BaslerSettings::OK) {
+                       break;
+                   }
+                   /// Trying to set value
+                   if (nodeValue.TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::LOAD_SET: {
+               auto node = nodeMap.GetNode("UserSetSelector");
+               CEnumParameter(node).SetValue(value.data());
+               CCommandParameter(nodeMap, "UserSetLoad").Execute();
+               err = BaslerSettings::OK;
+               break;
+           }
+           case BaslerSettings::OFFSET_X: {
+               auto node = nodeMap.GetNode("Width");
+               int maxWidth = (int) CIntegerParameter(node).GetMax();
+               int width = (int) CIntegerParameter(node).GetValue();
+               node = nodeMap.GetNode("OffsetX");
+               size_t id;
+               int valueInt;
+               try {
+                   valueInt = std::stoi(value, &id, 10);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueInt < 0 || valueInt > (maxWidth - width)) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CIntegerParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueInt)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::OFFSET_Y: {
+               auto node = nodeMap.GetNode("Height");
+               int maxHeight = (int) CIntegerParameter(node).GetMax();
+               int height = (int) CIntegerParameter(node).GetValue();
+               node = nodeMap.GetNode("OffsetY");
+               size_t id;
+               int valueInt;
+               try {
+                   valueInt = std::stoi(value, &id, 10);
+               }
+               catch (...) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (id != value.size()) {
+                   err = BaslerSettings::VALUE_TYPE_ERROR;
+                   break;
+               }
+               if (valueInt < 0 || valueInt > (maxHeight - height)) {
+                   err = BaslerSettings::VALUE_ERROR;
+                   break;
+               }
+               if (GenApi::IsWritable(node)) {
+                   CIntegerParameter nodeValue(node);
+                   if (nodeValue.TrySetValue(valueInt)) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::PIXEL_FORMAT: {
+               auto node = nodeMap.GetNode("PixelFormat");
+               if (GenApi::IsWritable(node)) {
+                   CEnumParameter nodeValue(node);
+                   StringList_t list;
+                   nodeValue.GetAllValues(list);
+                   /// check setting value with available values
+                   err = BaslerSettings::VALUE_ERROR;
+                   for (const auto &item : list) {
+                       if (std::strcmp(item, value.c_str()) == 0) {
+                           err = BaslerSettings::OK;
+                           break;
+                       }
+                   }
+                   if (err != BaslerSettings::OK) {
+                       break;
+                   }
+                   /// Trying to set value
+                   if (nodeValue.TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::SAVE_SET: {
+               CEnumParameter(nodeMap, "UserSetSelector").SetValue(value.data());
+               CCommandParameter(nodeMap, "UserSetSave").Execute();
+               err = BaslerSettings::OK;
+               break;
+           }
+           case BaslerSettings::SHUTTER_MODE: {
+               auto node = nodeMap.GetNode("SensorShutterMode");
+               if (GenApi::IsWritable(node)) {
+                   CEnumParameter nodeValue(node);
+                   StringList_t list;
+                   nodeValue.GetAllValues(list);
+                   /// check setting value with available values
+                   err = BaslerSettings::VALUE_ERROR;
+                   for (const auto &item : list) {
+                       if (std::strcmp(item, value.c_str()) == 0) {
+                           err = BaslerSettings::OK;
+                           break;
+                       }
+                   }
+                   if (err != BaslerSettings::OK) {
+                       break;
+                   }
+                   /// Trying to set value
+                   if (nodeValue.TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::UID: {
+               auto node = nodeMap.GetNode("DeviceUserID");
+               if (GenApi::IsWritable(node)) {
+                   if (CStringParameter(node).TrySetValue(value.data())) {
+                       err = BaslerSettings::OK;
+                   } else {
+                       err = BaslerSettings::ERROR_WRITING_VALUE;
+                   }
+               } else {
+                   err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
+               }
+               break;
+           }
+           case BaslerSettings::USER_SET_DEFAULT: {
+               CEnumParameter(nodeMap, "UserSetDefaultSelector").SetValue(value.data());
+               err = BaslerSettings::OK;
+               break;
+           }
+           default:
+               return BaslerSettings::NO_SUCH_SETTING;
+       }
+    }
+    catch (GenICam_3_1_Basler_pylon::GenericException e) {
+        if (mLogging) {
+            std::string errStr = e.what();
+            log(PYLON_TAG + errStr, 2);
         }
-        case BaslerSettings::GAIN_SELECTOR: {
-            auto node = nodeMap.GetNode("GainSelector");
-            if (GenApi::IsWritable(node)) {
-                CEnumParameter nodeValue(node);
-                StringList_t list;
-                nodeValue.GetAllValues(list);
-                /// check setting value with available values
-                err = BaslerSettings::VALUE_ERROR;
-                for (const auto &item : list) {
-                    if (std::strcmp(item, value.c_str()) == 0) {
-                        err = BaslerSettings::OK;
-                        break;
-                    }
-                }
-                if (err != BaslerSettings::OK) {
-                    break;
-                }
-                /// Trying to set value
-                if (nodeValue.TrySetValue(value.data())) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::LOAD_SET: {
-            auto node = nodeMap.GetNode("UserSetSelector");
-            CEnumParameter(node).SetValue(value.data());
-            CCommandParameter(nodeMap, "UserSetLoad").Execute();
-            err = BaslerSettings::OK;
-            // TODO: Отображение обновлённых настроек
-            break;
-        }
-        case BaslerSettings::OFFSET_X: {
-            auto node = nodeMap.GetNode("Width");
-            int maxWidth = (int) CIntegerParameter(node).GetMax();
-            int width = (int) CIntegerParameter(node).GetValue();
-            node = nodeMap.GetNode("OffsetX");
-            size_t id;
-            int valueInt;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (valueInt < 0 || valueInt > (maxWidth - width)) {
-                err = BaslerSettings::VALUE_ERROR;
-                break;
-            }
-            if (GenApi::IsWritable(node)) {
-                CIntegerParameter nodeValue(node);
-                if (nodeValue.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::OFFSET_Y: {
-            auto node = nodeMap.GetNode("Height");
-            int maxHeight = (int) CIntegerParameter(node).GetMax();
-            int height = (int) CIntegerParameter(node).GetValue();
-            node = nodeMap.GetNode("OffsetY");
-            size_t id;
-            int valueInt;
-            try {
-                valueInt = std::stoi(value, &id, 10);
-            }
-            catch (...) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (id != value.size()) {
-                err = BaslerSettings::VALUE_TYPE_ERROR;
-                break;
-            }
-            if (valueInt < 0 || valueInt > (maxHeight - height)) {
-                err = BaslerSettings::VALUE_ERROR;
-                break;
-            }
-            if (GenApi::IsWritable(node)) {
-                CIntegerParameter nodeValue(node);
-                if (nodeValue.TrySetValue(valueInt)) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::PIXEL_FORMAT: {
-            auto node = nodeMap.GetNode("PixelFormat");
-            if (GenApi::IsWritable(node)) {
-                CEnumParameter nodeValue(node);
-                StringList_t list;
-                nodeValue.GetAllValues(list);
-                /// check setting value with available values
-                err = BaslerSettings::VALUE_ERROR;
-                for (const auto &item : list) {
-                    if (std::strcmp(item, value.c_str()) == 0) {
-                        err = BaslerSettings::OK;
-                        break;
-                    }
-                }
-                if (err != BaslerSettings::OK) {
-                    break;
-                }
-                /// Trying to set value
-                if (nodeValue.TrySetValue(value.data())) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        case BaslerSettings::SAVE_SET: {
-            auto node = nodeMap.GetNode("UserSetSelector");
-            CEnumParameter(node).SetValue(value.data());
-            CCommandParameter(nodeMap, "UserSetSave").Execute();
-            err = BaslerSettings::OK;
-            break;
-        }
-        case BaslerSettings::UID: {
-            auto node = nodeMap.GetNode("DeviceUserID");
-            if (GenApi::IsWritable(node)) {
-                if (CStringParameter(node).TrySetValue(value.data())) {
-                    err = BaslerSettings::OK;
-                } else {
-                    err = BaslerSettings::ERROR_WRITING_VALUE;
-                }
-            }
-            else {
-                err = BaslerSettings::NODE_IS_NOT_WRITEABLE;
-            }
-            break;
-        }
-        default:
-            return BaslerSettings::NO_SUCH_SETTING;
+        value = "";
     }
     return err;
 }
