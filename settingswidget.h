@@ -41,7 +41,7 @@ public:
 
 private slots:
 
-    void onConfSetComboBoxIndexChanged(int index);
+    void onAcquisitionCheckBoxChecked(int state);
     void onExposureAutoComboBoxTextChanged(const QString& text);
     void onExposureAutoMaxSpinBoxValueChanged(double value);
     void onExposureAutoMinSpinBoxValueChanged(double value);
@@ -52,9 +52,9 @@ private slots:
     void onFrameWidthSliderValueChanged(int value);
     void onFrameWidthSpinBoxValueChanged(int value);
     void onGainAutoComboBoxTextChanged(QString text);
-    void onGainMaxSpinBoxValueChanged(double value);
-    void onGainMinSpinBoxValueChanged(double value);
-    void onGainSelectorComboBoxIndexChanged(int index);
+    void onGainAutoMaxSpinBoxValueChanged(double value);
+    void onGainAutoMinSpinBoxValueChanged(double value);
+    void onGainSelectorComboBoxTextChanged(const QString& text);
     void onGainSpinBoxValueChanged(double value);
     void onLoadUserSetButtonClicked();
     void onOffsetXSliderValueChanged(int value);

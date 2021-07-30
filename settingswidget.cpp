@@ -56,20 +56,21 @@ T SettingsWidget::convert(const std::string& src) {
 }
 
 void SettingsWidget::mConnectWidgets() {
-    connect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onConfSetComboBoxIndexChanged(int)));
+
+    connect(ui->acquisitionCheckBox, &QCheckBox::stateChanged, this, &SettingsWidget::onAcquisitionCheckBoxChecked);
     connect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
     connect(ui->exposureAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onExposureAutoMaxSpinBoxValueChanged(double)));
     connect(ui->exposureAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onExposureAutoMaxSpinBoxValueChanged(double)));
-    connect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSliderValueChanged(int)));
+    connect(ui->exposureTimeSlider, &QSlider::valueChanged, this, &SettingsWidget::onExposureTimeSliderValueChanged);
     connect(ui->exposureTimeSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onExposureTimeSpinBoxValueChanged(double)));
-    connect(ui->frameHeightSlider, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSliderValueChanged(int)));
+    connect(ui->frameHeightSlider, &QSlider::valueChanged, this, &SettingsWidget::onFrameHeightSliderValueChanged);
     connect(ui->frameHeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameHeightSpinBoxValueChanged(int)));
     connect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::onFrameWidthSliderValueChanged);
     connect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameWidthSpinBoxValueChanged(int)));
-    connect(ui->gainAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onGainAutoComboBoxTextChanged(QString)));
-    connect(ui->gainMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainMinSpinBoxValueChanged(double)));
-    connect(ui->gainMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainMaxSpinBoxValueChanged(double)));
-    connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxIndexChanged(int)));
+    connect(ui->gainAutoComboBox, &QComboBox::currentTextChanged, this, &SettingsWidget::onGainAutoComboBoxTextChanged);
+    connect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMaxSpinBoxValueChanged(double)));
+    connect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMinSpinBoxValueChanged(double)));
+    connect(ui->gainSelectorComboBox, &QComboBox::currentTextChanged, this, &SettingsWidget::onGainSelectorComboBoxTextChanged);
     connect(ui->gainSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainSpinBoxValueChanged(double)));
     connect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(onLoadUserSetButtonClicked()));
     connect(ui->offsetXSlider, SIGNAL(valueChanged(int)), this, SLOT(onOffsetXSliderValueChanged(int)));
@@ -86,9 +87,8 @@ void SettingsWidget::mConnectWidgets() {
 }
 
 void SettingsWidget::mDisconnectWidgets() {
-
-    disconnect(ui->confSetComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onConfSetComboBoxIndexChanged(int)));
-    disconnect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onExposureAutoComboBoxTextChanged(QString)));
+    disconnect(ui->acquisitionCheckBox, &QCheckBox::stateChanged, this, &SettingsWidget::onAcquisitionCheckBoxChecked);
+    disconnect(ui->exposureAutoComboBox, SIGNAL(currentTextChanged(const QString &)), this, SLOT(onExposureAutoComboBoxTextChanged(const QString &)));
     disconnect(ui->exposureAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onExposureAutoMaxSpinBoxValueChanged(double)));
     disconnect(ui->exposureAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onExposureAutoMinSpinBoxValueChanged(double)));
     disconnect(ui->exposureTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(onExposureTimeSliderValueChanged(int)));
@@ -98,8 +98,8 @@ void SettingsWidget::mDisconnectWidgets() {
     disconnect(ui->frameWidthSlider, &QSlider::valueChanged, this, &SettingsWidget::onFrameWidthSliderValueChanged);
     disconnect(ui->frameWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onFrameWidthSpinBoxValueChanged(int)));
     disconnect(ui->gainAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onGainAutoComboBoxTextChanged(QString)));
-    disconnect(ui->gainMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainMinSpinBoxValueChanged(double)));
-    disconnect(ui->gainMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainMaxSpinBoxValueChanged(double)));
+    disconnect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMaxSpinBoxValueChanged(double)));
+    disconnect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMinSpinBoxValueChanged(double)));
     disconnect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxIndexChanged(int)));
     disconnect(ui->gainSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainSpinBoxValueChanged(double)));
     disconnect(ui->loadUserSetButton, SIGNAL(clicked()), this, SLOT(onLoadUserSetButtonClicked()));
@@ -116,9 +116,15 @@ void SettingsWidget::mDisconnectWidgets() {
 
 }
 
-void SettingsWidget::onConfSetComboBoxIndexChanged(int index) {
-    // TODO: Callback to BaslerHandler
-    // Re-set parameters
+void SettingsWidget::onAcquisitionCheckBoxChecked(int state) {
+    bool b = state;
+    if (callback_setSetting(mCameraIndex, BaslerSettings::ACQUISITION_CONTROL, state ? "1" : "0") != BaslerSettings::OK) {
+        disconnect(ui->acquisitionCheckBox, &QCheckBox::stateChanged, this, &SettingsWidget::onAcquisitionCheckBoxChecked);
+        b = callback_getSetting(mCameraIndex, BaslerSettings::ACQUISITION_CONTROL) == "1";
+        ui->acquisitionCheckBox->setChecked(b);
+        connect(ui->acquisitionCheckBox, &QCheckBox::stateChanged, this, &SettingsWidget::onAcquisitionCheckBoxChecked);
+    }
+    ui->targetFPSSpinBox->setEnabled(b);
 }
 
 void SettingsWidget::onExposureAutoComboBoxTextChanged(const QString& text) {
@@ -136,8 +142,10 @@ void SettingsWidget::onExposureAutoComboBoxTextChanged(const QString& text) {
     }
     ui->exposureTimeSpinBox->setEnabled(text == "Off");
     ui->exposureTimeSlider->setEnabled(text == "Off");
-    ui->exposureAutoMinSpinBox->setEnabled(text != "Off");
-    ui->exposureAutoMaxSpinBox->setEnabled(text != "Off");
+    if (ui->exposureAutoMaxSpinBox->value() >= 0 && ui->exposureAutoMinSpinBox->value() >= 0) {
+        ui->exposureAutoMinSpinBox->setEnabled(text != "Off");
+        ui->exposureAutoMaxSpinBox->setEnabled(text != "Off");
+    }
 }
 
 void SettingsWidget::onExposureAutoMaxSpinBoxValueChanged(double value) {
@@ -228,21 +236,65 @@ void SettingsWidget::onFrameWidthSpinBoxValueChanged(int value) {
 }
 
 void SettingsWidget::onGainAutoComboBoxTextChanged(QString text) {
-    ui->gainSpinBox->setEnabled(text == "Off");
-    ui->gainSpinBox->setEnabled(text == "Off");
-    // TODO: Callback to BaslerHandler
+    auto tempText = text;
+    if (callback_setSetting(mCameraIndex, BaslerSettings::GAIN_AUTO, text.toStdString()) != BaslerSettings::OK) {
+        disconnect(ui->gainAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onGainAutoComboBoxTextChanged(QString)));
+        tempText = callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO).data();
+        ui->gainAutoComboBox->setCurrentText(tempText);
+        connect(ui->gainAutoComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(onGainAutoComboBoxTextChanged(QString)));
+    }
+    if (ui->gainAutoMaxSpinBox->value() >= 0 && ui->gainAutoMinSpinBox->value() >= 0) {
+        ui->gainSpinBox->setEnabled(tempText == "Off");
+        ui->gainSpinBox->setEnabled(tempText == "Off");
+    }
+
 }
 
-void SettingsWidget::onGainMaxSpinBoxValueChanged(double value) {
-    // TODO: Callback to BaslerHandler
+void SettingsWidget::onGainAutoMaxSpinBoxValueChanged(double value) {
+    if (callback_setSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MAX, std::to_string(value)) != BaslerSettings::OK) {
+        disconnect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(ongainAutoMaxSpinBoxValueChanged(double)));
+        ui->gainAutoMaxSpinBox->setValue(convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MAX)));
+        connect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(ongainAutoMaxSpinBoxValueChanged(double)));
+    }
 }
 
-void SettingsWidget::onGainMinSpinBoxValueChanged(double value) {
-    // TODO: Callback to BaslerHandler
+void SettingsWidget::onGainAutoMinSpinBoxValueChanged(double value) {
+    if (callback_setSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MIN, std::to_string(value)) != BaslerSettings::OK) {
+        disconnect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(ongainAutoMaxSpinBoxValueChanged(double)));
+        ui->gainAutoMinSpinBox->setValue(convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MIN)));
+        connect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(ongainAutoMaxSpinBoxValueChanged(double)));
+    }
 }
 
-void SettingsWidget::onGainSelectorComboBoxIndexChanged(int index) {
-    // TODO: Callback to BaslerHandler
+void SettingsWidget::onGainSelectorComboBoxTextChanged(const QString& text) {
+    if (callback_setSetting(mCameraIndex, BaslerSettings::GAIN_SELECTOR, text.toStdString()) != BaslerSettings::OK) {
+        disconnect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxIndexChanged(int)));
+        ui->gainSelectorComboBox->setCurrentText(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_SELECTOR).data());
+        connect(ui->gainSelectorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onGainSelectorComboBoxIndexChanged(int)));
+    } else {
+        disconnect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMaxSpinBoxValueChanged(double)));
+        disconnect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMinSpinBoxValueChanged(double)));
+        auto gain = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN));
+        auto gainMax = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_MAX));
+        auto gainMin = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_MIN));
+        auto gainAutoMax = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MAX));
+        auto gainAutoMin = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MIN));
+        if (gainAutoMin < 0 || gainAutoMax < 0) {
+            ui->gainAutoMaxSpinBox->setEnabled(false);
+            ui->gainAutoMinSpinBox->setEnabled(false);
+        }
+        ui->gainSpinBox->setMaximum(gainMax);
+        ui->gainSpinBox->setMinimum(gainMin);
+        ui->gainSpinBox->setValue(gain);
+        ui->gainAutoMaxSpinBox->setMaximum(gainMax);
+        ui->gainAutoMaxSpinBox->setMinimum(gainAutoMin);
+        ui->gainAutoMaxSpinBox->setValue(gainAutoMax);
+        ui->gainAutoMinSpinBox->setMaximum(gainAutoMin);
+        ui->gainAutoMinSpinBox->setMinimum(gainMin);
+        ui->gainAutoMinSpinBox->setValue(gainAutoMin);
+        connect(ui->gainAutoMaxSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMaxSpinBoxValueChanged(double)));
+        connect(ui->gainAutoMinSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onGainAutoMinSpinBoxValueChanged(double)));
+    }
 }
 
 void SettingsWidget::onGainSpinBoxValueChanged(double value) {
@@ -316,7 +368,7 @@ void SettingsWidget::updateValues() {
     }
     int cursorPos = 0;
     std::string tmpString;
-    ui->nameLabel->setText(callback_getSetting(mCameraIndex, BaslerSettings::CAMERA_NAME).data());
+    ui->nameLabel->setText(callback_getSetting(mCameraIndex, BaslerSettings::MODEL_NAME).data());
     ui->addressLabel->setText(callback_getSetting(mCameraIndex, BaslerSettings::CAMERA_ADDRESS).data());
     ui->uidLineEdit->setText(callback_getSetting(mCameraIndex, BaslerSettings::UID).data());
     /// Pixels format
@@ -394,6 +446,9 @@ void SettingsWidget::updateValues() {
     ui->frameHeightSlider->setMinimum(offsetY < frameHeightMin ? frameHeightMin : offsetY);
     ui->frameHeightSpinBox->setMinimum(offsetY < frameHeightMin ? frameHeightMin : offsetY);
     /// Target frame rate
+    bool acquisitionControlEnabled = callback_getSetting(mCameraIndex, BaslerSettings::ACQUISITION_CONTROL) == "1";
+    ui->acquisitionCheckBox->setChecked(acquisitionControlEnabled);
+    ui->targetFPSSpinBox->setEnabled(acquisitionControlEnabled);
     ui->targetFPSSpinBox->setValue(convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::ACQUISITION_FRAME_RATE)));
     /// Exposure auto
     auto exposureAutoList = callback_getSetting(mCameraIndex, BaslerSettings::EXPOSURE_AUTO_LIST);
@@ -439,6 +494,10 @@ void SettingsWidget::updateValues() {
     ui->exposureTimeSpinBox->setValue(exposureTime);
     auto exposureAutoMin = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::EXPOSURE_AUTO_TIME_MIN));
     auto exposureAutoMax = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::EXPOSURE_AUTO_TIME_MAX));
+    if (exposureAutoMax < 0 || exposureTimeMin < 0) {
+        ui->exposureAutoMaxSpinBox->setEnabled(false);
+        ui->exposureAutoMinSpinBox->setEnabled(false);
+    }
     ui->exposureAutoMinSpinBox->setMinimum(exposureTimeMin);
     ui->exposureAutoMinSpinBox->setMaximum(exposureAutoMax);
     ui->exposureAutoMinSpinBox->setValue(exposureAutoMin);
@@ -460,13 +519,13 @@ void SettingsWidget::updateValues() {
                 ui->gainAutoComboBox->setCurrentIndex(ui->gainAutoComboBox->count() - 1);
                 if (tmpString == "Off") {
                     ui->gainSpinBox->setEnabled(true);
-                    ui->gainMaxSpinBox->setEnabled(false);
-                    ui->gainMinSpinBox->setEnabled(false);
+                    ui->gainAutoMaxSpinBox->setEnabled(false);
+                    ui->gainAutoMinSpinBox->setEnabled(false);
                 }
                 else {
                     ui->gainSpinBox->setEnabled(false);
-                    ui->gainMaxSpinBox->setEnabled(true);
-                    ui->gainMinSpinBox->setEnabled(true);
+                    ui->gainAutoMaxSpinBox->setEnabled(true);
+                    ui->gainAutoMinSpinBox->setEnabled(true);
                 }
             }
             tmpString.clear();
@@ -501,15 +560,19 @@ void SettingsWidget::updateValues() {
     auto gainMin = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_MIN));
     auto gainAutoMax = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MAX));
     auto gainAutoMin = convert<double>(callback_getSetting(mCameraIndex, BaslerSettings::GAIN_AUTO_MIN));
+    if (gainAutoMin < 0 || gainAutoMax < 0) {
+        ui->gainAutoMaxSpinBox->setEnabled(false);
+        ui->gainAutoMinSpinBox->setEnabled(false);
+    }
     ui->gainSpinBox->setMaximum(gainMax);
     ui->gainSpinBox->setMinimum(gainMin);
     ui->gainSpinBox->setValue(gain);
-    ui->gainMaxSpinBox->setMaximum(gainMax);
-    ui->gainMaxSpinBox->setMinimum(gainAutoMin);
-    ui->gainMaxSpinBox->setValue(gainAutoMax);
-    ui->gainMinSpinBox->setMaximum(gainAutoMin);
-    ui->gainMinSpinBox->setMinimum(gainMin);
-    ui->gainMinSpinBox->setValue(gainAutoMin);
+    ui->gainAutoMaxSpinBox->setMaximum(gainMax);
+    ui->gainAutoMaxSpinBox->setMinimum(gainAutoMin);
+    ui->gainAutoMaxSpinBox->setValue(gainAutoMax);
+    ui->gainAutoMinSpinBox->setMaximum(gainAutoMin);
+    ui->gainAutoMinSpinBox->setMinimum(gainMin);
+    ui->gainAutoMinSpinBox->setValue(gainAutoMin);
     /// User Set
     auto userSetSelectorList = callback_getSetting(mCameraIndex, BaslerSettings::USER_SET_SELECTOR_LIST);
     auto currentUserSetSelector = callback_getSetting(mCameraIndex, BaslerSettings::USER_SET_SELECTOR);

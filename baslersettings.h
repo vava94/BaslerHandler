@@ -19,43 +19,44 @@ struct BaslerSettings {
     };
 
     enum Settings {
-        ACQUISITION_FRAME_RATE,
-        CAMERA_ADDRESS,
-        CAMERA_NAME,
-        EXPOSURE_AUTO,
-        EXPOSURE_AUTO_LIST,
-        EXPOSURE_AUTO_TIME_MAX,
-        EXPOSURE_AUTO_TIME_MIN,
-        EXPOSURE_TIME,
-        EXPOSURE_TIME_MAX,
-        EXPOSURE_TIME_MIN,
-        FRAME_HEIGHT,
-        FRAME_HEIGHT_MAX,
-        FRAME_HEIGHT_MIN,
-        FRAME_WIDTH,
-        FRAME_WIDTH_MAX,
-        FRAME_WIDTH_MIN,
-        GAIN,
-        GAIN_AUTO,
-        GAIN_AUTO_LIST,
-        GAIN_AUTO_MAX,
-        GAIN_AUTO_MIN,
-        GAIN_MAX,
-        GAIN_MIN,
-        GAIN_SELECTOR,
-        GAIN_SELECTOR_LIST,
-        LOAD_SET,
-        OFFSET_X,
-        OFFSET_Y,
-        PIXEL_FORMAT,
-        PIXEL_FORMATS_LIST,
-        SAVE_SET,
-        SHUTTER_MODE,
-        SHUTTER_MODE_LIST,
-        UID,
-        USER_SET_DEFAULT,
-        USER_SET_SELECTOR,
-        USER_SET_SELECTOR_LIST,
+        ACQUISITION_CONTROL,        /// 0
+        ACQUISITION_FRAME_RATE,     /// 1
+        CAMERA_ADDRESS,             /// 2
+        EXPOSURE_AUTO,              /// 3
+        EXPOSURE_AUTO_LIST,         /// 4
+        EXPOSURE_AUTO_TIME_MAX,     /// 5
+        EXPOSURE_AUTO_TIME_MIN,     /// 6
+        EXPOSURE_TIME,              /// 7
+        EXPOSURE_TIME_MAX,          /// 8
+        EXPOSURE_TIME_MIN,          /// 9
+        FRAME_HEIGHT,               /// 10
+        FRAME_HEIGHT_MAX,           /// 11
+        FRAME_HEIGHT_MIN,           /// 12
+        FRAME_WIDTH,                /// 13
+        FRAME_WIDTH_MAX,            /// 14
+        FRAME_WIDTH_MIN,            /// 15
+        GAIN,                       /// 16
+        GAIN_AUTO,                  /// 17
+        GAIN_AUTO_LIST,             /// 18
+        GAIN_AUTO_MAX,              /// 19
+        GAIN_AUTO_MIN,              /// 20
+        GAIN_MAX,                   /// 21
+        GAIN_MIN,                   /// 22
+        GAIN_SELECTOR,              /// 23
+        GAIN_SELECTOR_LIST,         /// 24
+        LOAD_SET,                   /// 25
+        MODEL_NAME,                 /// 26
+        OFFSET_X,                   /// 27
+        OFFSET_Y,                   /// 28
+        PIXEL_FORMAT,               /// 29
+        PIXEL_FORMATS_LIST,         /// 30
+        SAVE_SET,                   /// 31
+        SHUTTER_MODE,               /// 32
+        SHUTTER_MODE_LIST,          /// 33
+        UID,                        /// 34
+        USER_SET_DEFAULT,           /// 35
+        USER_SET_SELECTOR,          /// 36
+        USER_SET_SELECTOR_LIST,     /// 37
     };
 
 };
