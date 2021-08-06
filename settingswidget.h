@@ -51,7 +51,7 @@ private slots:
     void onFrameHeightSpinBoxValueChanged(int value);
     void onFrameWidthSliderValueChanged(int value);
     void onFrameWidthSpinBoxValueChanged(int value);
-    void onGainAutoComboBoxTextChanged(QString text);
+    void onGainAutoComboBoxTextChanged(const QString& text);
     void onGainAutoMaxSpinBoxValueChanged(double value);
     void onGainAutoMinSpinBoxValueChanged(double value);
     void onGainSelectorComboBoxTextChanged(const QString& text);
@@ -61,7 +61,7 @@ private slots:
     void onOffsetXSpinBoxValueChanged(int value);
     void onOffsetYSliderValueChanged(int value);
     void onOffsetYSpinBoxValueChanged(int value);
-    void onPixelFormatComboBoxIndexChanged(int index);
+    void onPixelFormatComboBoxTextChanged(const QString& text);
     void onSaveUserSetButtonClicked();
     void onShutterComboBoxTextChanged(const QString& text);
     void onStartupSetComboCoxIndexChanged(int index);

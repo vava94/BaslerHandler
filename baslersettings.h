@@ -50,13 +50,14 @@ struct BaslerSettings {
         OFFSET_Y,                   /// 28
         PIXEL_FORMAT,               /// 29
         PIXEL_FORMATS_LIST,         /// 30
-        SAVE_SET,                   /// 31
-        SHUTTER_MODE,               /// 32
-        SHUTTER_MODE_LIST,          /// 33
-        UID,                        /// 34
-        USER_SET_DEFAULT,           /// 35
-        USER_SET_SELECTOR,          /// 36
-        USER_SET_SELECTOR_LIST,     /// 37
+        SHUTTER_MODE,               /// 31
+        SHUTTER_MODE_LIST,          /// 32
+        UID,                        /// 33
+        USER_SET_DEFAULT,           /// 34
+        USER_SET_LOAD,              /// 35
+        USER_SET_SAVE,              /// 36
+        USER_SET_SELECTOR,          /// 37
+        USER_SET_SELECTOR_LIST,     /// 38
     };
 
 };

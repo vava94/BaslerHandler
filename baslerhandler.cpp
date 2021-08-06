@@ -1125,12 +1125,6 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                }
                break;
            }
-           case BaslerSettings::SAVE_SET: {
-               CEnumParameter(nodeMap, "UserSetSelector").SetValue(value.data());
-               CCommandParameter(nodeMap, "UserSetSave").Execute();
-               err = BaslerSettings::OK;
-               break;
-           }
            case BaslerSettings::SHUTTER_MODE: {
                auto node = nodeMap.GetNode("SensorShutterMode");
                if (GenApi::IsWritable(node)) {
@@ -1174,6 +1168,23 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
            }
            case BaslerSettings::USER_SET_DEFAULT: {
                CEnumParameter(nodeMap, "UserSetDefaultSelector").SetValue(value.data());
+               err = BaslerSettings::OK;
+               break;
+           }
+           case BaslerSettings::USER_SET_LOAD: {
+               CEnumParameter(nodeMap, "UserSetSelector").SetValue(value.data());
+               CCommandParameter(nodeMap, "UserSetLoad").Execute();
+               err = BaslerSettings::OK;
+               break;
+           }
+           case BaslerSettings::USER_SET_SAVE: {
+               CEnumParameter(nodeMap, "UserSetSelector").SetValue(value.data());
+               CCommandParameter(nodeMap, "UserSetSave").Execute();
+               err = BaslerSettings::OK;
+               break;
+           }
+           case BaslerSettings::USER_SET_SELECTOR: {
+               CEnumParameter(nodeMap, "UserSetSelector").SetValue(value.data());
                err = BaslerSettings::OK;
                break;
            }

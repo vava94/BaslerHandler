@@ -50,7 +50,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-300</y>
+        <y>-357</y>
         <width>366</width>
         <height>881</height>
        </rect>
@@ -878,7 +878,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="confSetComboBox">
+           <widget class="QComboBox" name="userSetSelectorComboBox">
             <property name="minimumSize">
              <size>
               <width>150</width>
@@ -951,7 +951,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="startupSetComboBox">
+           <widget class="QComboBox" name="userSetDefaultComboBox">
             <property name="minimumSize">
              <size>
               <width>150</width>
