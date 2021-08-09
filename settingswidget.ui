@@ -419,7 +419,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="targetFPSSpinBox">
+           <widget class="QDoubleSpinBox" name="acquisitionFrameRateSpinBox">
             <property name="maximumSize">
              <size>
               <width>80</width>

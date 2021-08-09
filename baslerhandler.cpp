@@ -459,10 +459,8 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
             }
             frameRates[cameraIndex] = 1000.0f / (currFps * 0.1f);
             currFps = 0;
-            char *endChar;
-            grabFrame.exposureTime = (int) std::strtol(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str(), &endChar, 10);
-            /// TODO: Delete
-            //grabFrame.exposureTime = std::atoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME).c_str());
+            size_t endChar;
+            grabFrame.exposureTime = (int) std::stoi(getSetting(cameraIndex, BaslerSettings::EXPOSURE_TIME), &endChar, 10);
             formatConverter.Convert(pylonImage, ptrGrabResult);
             memcpy(grabFrame.data, pylonImage.GetBuffer(), bufferSize);
             frameCallback(cameraIndex, &grabFrame);
@@ -1167,7 +1165,7 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
                break;
            }
            case BaslerSettings::USER_SET_DEFAULT: {
-               CEnumParameter(nodeMap, "UserSetDefaultSelector").SetValue(value.data());
+               CEnumParameter(nodeMap, isAce ? "UserSetDefaultSelector" : "UserSetDefault").SetValue(value.data());
                err = BaslerSettings::OK;
                break;
            }

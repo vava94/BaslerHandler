@@ -42,6 +42,7 @@ public:
 private slots:
 
     void onAcquisitionCheckBoxChecked(int state);
+    void onAcquisitionFrameRateSpinBoxValueChanged(double value);
     void onExposureAutoComboBoxTextChanged(const QString& text);
     void onExposureAutoMaxSpinBoxValueChanged(double value);
     void onExposureAutoMinSpinBoxValueChanged(double value);
@@ -64,9 +65,9 @@ private slots:
     void onPixelFormatComboBoxTextChanged(const QString& text);
     void onSaveUserSetButtonClicked();
     void onShutterComboBoxTextChanged(const QString& text);
-    void onStartupSetComboCoxIndexChanged(int index);
-    void onTargetFPSSpinBoxValueChanged(double value);
+
     void onUidLineEditTextEdited(const QString& text);
+    void onUserSetDefaultComboBoxTextChanged(const QString& text);
 
 protected:
     void showEvent(QShowEvent *event) override;
