@@ -7,8 +7,6 @@
 #ifndef BASLERHANDLER_HPP
 #define BASLERHANDLER_HPP
 
-#define BASLERHANDLER_SETTINGS_GUI
-
 #ifdef BASLERHANDLER_SETTINGS_GUI
 #include "settingswidget.h"
 #endif
@@ -46,10 +44,6 @@ public:
     };
 
     explicit BaslerHandler();
-
-    bool applySetting(BaslerSettings::Settings setting, std::string value);
-
-    bool changePixelFormat(int index, std::string format);
 
     bool connectCamera(int index);
 
@@ -102,7 +96,9 @@ private:
     bool mLogging = false;
     int mGrabbersSize = 0;
     CInstantCameraArray mCamerasArray;
+    #ifdef BASLERHANDLER_SETTINGS_GUI
     SettingsWidget *settingsWidget = nullptr;
+    #endif
     std::function<void(int, Frame*)> frameCallback = nullptr;
     std::function<void(std::string, int)> log = nullptr;
     std::vector<float> frameRates;

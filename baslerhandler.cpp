@@ -15,27 +15,6 @@ BaslerHandler::BaslerHandler() {
 
 }
 
-bool BaslerHandler::applySetting(BaslerSettings::Settings setting, std::string value) {
-
-}
-
-bool BaslerHandler::changePixelFormat(int index, std::string format) {
-    auto &camera = mCamerasArray[index];
-    INodeMap &nodeMap = camera.GetNodeMap();
-    camera.Open();
-    CEnumParameter pixelFormat(nodeMap, "PixelFormat");
-    if(pixelFormat.CanSetValue(format.data())) {
-        pixelFormat.SetValue(format.data());
-        camera.Close();
-        return true;
-    } else  {
-        if (mLogging) {
-            log(PYLON_TAG "Pixel format change error.", 2);
-        }
-        return false;
-    }
-}
-
 bool BaslerHandler::connectCamera(int index) {
     int c = 0;
     std::string msg;
@@ -477,7 +456,6 @@ void BaslerHandler::grabLoop(int cameraIndex, EPixelType pixelType) {
         log(PYLON_TAG "Capture form camera " + std::string(cam.GetDeviceInfo().GetModelName().c_str()) + " stopped.",
             0);
     }
-    std::cout << "grab stopped" << std::endl;
 }
 
 bool BaslerHandler::isGrabbing(int index) {
@@ -1201,6 +1179,7 @@ BaslerSettings::ErrorCode BaslerHandler::setSetting(int index, BaslerSettings::S
 }
 
 void BaslerHandler::startGrabbing(int index, EPixelType pixelType) {
+    if (index > mCamerasArray.GetSize() - 1) return;
     if (mCamerasArray[index].IsGrabbing()) return;
     mGrabThreads[index] = new std::thread(
             [this](auto && PH1, auto && PH2) {

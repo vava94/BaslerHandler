@@ -4,7 +4,7 @@
 * vitkiselyov@gmail.com
 */
 
-//TODO: сообщкемя об ошибках установки значений
+//TODO: сообщения об ошибках установки значений
 
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
